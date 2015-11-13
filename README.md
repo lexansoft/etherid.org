@@ -7,9 +7,11 @@ There are several Ethereum Name registars proposed/implemented. All of them are 
 
 The proper registar for names (or ID's) should provide:
 
-1. Easy way to register an ID
+1. Easy way to register a DOMAIN
 2. Some solution to the problem of what happens if/when I lost my privat key
-3. Easy and simple procedure to sell the ownership of the ID to somebody else. 
+3. Ability to register any number of ID's under the domain name
+4. Easy and simple procedure to sell the ownership of the DOMAIN to somebody else. 
+
 
 
 EtherId
@@ -17,7 +19,7 @@ EtherId
 
 EtherId as a simple Ethereum contract that implements the following solution:
 
-1. You can register an ID by calling the register() contract call. Once yuo do that you own the full control on the registration record, BUT the ownership will expire after some time. (let's say a year)
+1. You can register a DOMAIN by calling the register() contract call. Once you do that you own the full control on the registration record, BUT the ownership will expire after some time. (let's say a year)
 
 2. At any moment while you are stil holding the ownership you can prolong the ownersip by a simple registr call. If you fail to prolong your ownership, the record will go into the expired state, when anybody esle can call teh ownership.
 If you lost your private key, after some time the record will be again available for the registration.
