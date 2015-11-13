@@ -1,7 +1,8 @@
 ;
 ; EtherId contract
 ;
-
+; Written by Alexandre Naverniouk
+; 
 {
     (def "MAX_PROLONG"  2000000 ) ; in blocks
 
@@ -36,19 +37,6 @@
     (def "txParam3"     (calldataload 0x60) )
     (def "txParam4"     (calldataload 0x80) )
 
-    
-    ; parameters for domain()    
-    (def "txDomain"     (calldataload 0x20) )
-    (def "txProlong"    (calldataload 0x40) )
-    (def "txPrice"      (calldataload 0x60) )
-
-    ; parameters for d()    
-    (def "txDomain"     (calldataload 0x20) )
-    (def "txId"         (calldataload 0x40) )
-    (def "txValue"      (calldataload 0x60) ) ; 0 value deltes the id
-
-( return 0 ( lll {
-
     ; local variables
     (def "tx_value_used" 0x0 )
     (def "i" 0x20 )
@@ -56,27 +44,36 @@
     (def "is_admin" 0x60 )
     (def "ptr" 0x80 )
     (def "n" 0x100 )
+    (def "can_change" 0x120 )
+    (def "unused_record" 0x140 )
+    (def "is_admin" 0x160 )
                      
+( return 0 ( lll {
+
     [ tx_value_used ] 0             
     [ is_admin ] (= (caller) @@owner) 
                      
     ( when (= txCommand "domain")  
     {     
+        (def "txDomain"     (calldataload 0x20) )
+        (def "txProlong"    (calldataload 0x40) )
+        (def "txPrice"      (calldataload 0x60) )
+
         [ found ] 0
         [ ptr ] table_offset 
-        (for [i] : 0  (< @i @@n_domains) [i] (+ @i 1) 
+        (for [i] : 0  (&& (< @i @@n_domains) (= @found 0 ) )  [i] (+ @i 1) 
         {
-            (if (= txDomain @@ @ptr) { ; the domain found
+            (when (= txDomain @@ @ptr) { ; the domain found
 
                 [ found ] 1
 
-                (if 
+                (when 
                     (|| 
                         (= @@ (+ @ptr T_OWNER ) ( caller ) )        ; is mine
-                        (> ( callvalue ) >= ) @@ (+ @ptr T_PRICE )  ; has enough money 
+                        (> ( callvalue ) @@ (+ @ptr T_PRICE ) )  ; has enough money 
                     )
                 {
-                    (if (!= @@ (+ @ptr T_OWNER ) ( caller ) )       ; transfering to the new owner
+                    (when (!= @@ (+ @ptr T_OWNER ) ( caller ) )       ; transfering to the new owner
                     {
                         (send 0x303 @@ (+ @ptr T_OWNER ) @@ (+ @ptr T_PRICE ) ) ; transfer needed money
                         [ tx_value_used ] @@ (+ @ptr T_PRICE )      ; remember how much used
@@ -85,42 +82,127 @@
                     })
                  
                     [ n ] txProlong  ; prolong time in blocks           
-                    (if (> *n MAX_PROLONG ) { 
+                    (when (> @n MAX_PROLONG ) { 
                         [ n ] MAX_PROLONG   
                     })
-                    [[ (+ @ptr T_EXPIRES) ]] (+ ( NUMBER ) *n )     ; set expiration to current block + n
+                    [[ (+ @ptr T_EXPIRES) ]] (+ ( NUMBER ) @n )     ; set expiration to current block + n
                 })
             })
 
-            [ ptr ] (+ *ptr 7 )
+            [ ptr ] (+ @ptr 7 )
         })        
         
-        (if (= *found 0) ; not found in the table
+        (when (= @found 0) ; not found in the table
         {
-            (if (!= txParam1 0 ) { ; 0 not allowed as DOMAIN name
+            (when (!= txParam1 0 ) { ; 0 not allowed as DOMAIN name
                 [[ (+ @ptr T_DOMAIN) ]] txDomain
                 [[ (+ @ptr T_OWNER) ]]  ( caller )
                 [[ (+ @ptr T_PRICE) ]] txPrice
                     
                 [ n ] txProlong  ; prolong time in blocks           
-                (if (> *n MAX_PROLONG ) { 
+                (when (> @n MAX_PROLONG ) { 
                     [ n ] MAX_PROLONG   
                 })
-                [[ (+ @ptr T_EXPIRES) ]] (+ ( NUMBER ) *n )         ; set expiration to current block + n
-                
+                [[ (+ @ptr T_EXPIRES) ]] (+ ( NUMBER ) @n )         ; set expiration to current block + n
+
+                [[ n_domains ]] (+ @@n_domains 1 )
             })
         })
 
     })
 
-    ( when (&& @is_admin (= txCommand "kill") ) ) {
-        (suicide @@owner)
+    ( when (= txCommand "id")  
+    {     
+        (def "txIdDomain"     (calldataload 0x20) )
+        (def "txIdId"         (calldataload 0x40) )
+        (def "txIdValue"      (calldataload 0x60) ) ; 0 value deltes the id
+
+        ; first find the domain
+        [ found ] 0
+        [ can_change ] 0
+        [ ptr ] table_offset 
+        (for [i] : 0  (&& (< @i @@n_domains) (= @found 0 ) )  [i] (+ @i 1) 
+        {
+            (when (= txIdDomain @@ @ptr) { ; the domain found
+
+                [ found ] 1
+
+                (when 
+                    (|| 
+                        (= @@ (+ @ptr T_OWNER ) ( caller ) )        ; is mine
+                        (< ( NUMBER )  @@ (+ @ptr T_EXPIRES ) )      ; not yet expired
+                    )
+                {
+                     [ can_change ] 1
+                })
+            })
+
+            [ ptr ] (+ @ptr 7 )
+        })        
+        
+        (when (= @can_change 1) 
+        {
+            [ found ] 0
+            [ unused_record ] 0
+
+            (for [i] : 0  (&& (< @i @@n_ids) (= @found 0 ) )  [i] (+ @i 1) 
+            {
+                (when (&& (= @unused_record 0 ) (= @@ (+ @ptr T_ID_DOMAIN) 0 ) ) 
+                {
+                    [ unused_record ] @ptr ; remember for reuse
+                })
+
+                (when 
+                    (&&
+                        (= txIdDomain @@ (+ @ptr T_ID_DOMAIN) ) 
+                        (= txIdId @@ (+ @ptr T_ID_ID) ) 
+                    )
+                {
+                    [ found ] 1
+
+                    (when (= txIdValue 0 ) ; remove the id
+                    {
+                        [[ (+ @ptr T_ID_DOMAIN) ]] 0
+                        [[ (+ @ptr T_ID_ID) ]]  0
+                    })
+
+                    [[ (+ @ptr T_VALUE) ]] txIdValue
+                })
+
+                
+
+            })
+
+            (when (= @found 0 ) {
+                
+                (when (!= @unused_record 0 )
+                {
+                    [ ptr ] @unused_record 
+                })
+                
+                
+                (when (&& (!= txIdId 0 ) (!= txIdValue 0 ) ) 
+                { 
+                    [[ (+ @ptr T_ID_DOMAIN ) ]]  txIdDomain
+                    [[ (+ @ptr T_ID_ID ) ]]      txIdId
+                    [[ (+ @ptr T_ID_VALUE ) ]]   txIdValue
+
+                    [[ n_ids ]] (+ @@n_ids 1 )
+                })
+            })
+
+        })
+
+    })
+
+    ( when (&& @is_admin (= txCommand "kill") ) {
+            (suicide @@owner)
     })
 
     ( when (> ( callvalue ) @tx_value_used ) { ; return the left over money
         (send 0x303 ( caller ) (- ( callvalue ) @tx_value_used ) )
     });
 
-} 0)) 
+    } 0)) 
 }
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 # build the LLL contract
 
-lllc -x crps.lisp > crps.hex
+lllc -x etherid.lisp > etherid.hex
 
 
