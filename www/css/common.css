@@ -1,7 +1,7 @@
 body {
     margin: 0;
     font-family: Candara,Calibri,Segoe,Segoe UI,Optima,Arial,sans-serif; 
-    background:  #f6f6f6;
+/*    background:  #f6f6f6;*/
 }
 
 #header {
@@ -30,7 +30,7 @@ body {
     margin-top: 1em;
     padding: .5em;
     border-top-style: solid;
-    border-top-width: 3px;
+    border-top-width: 2px;
     border-top-color: #FF851B;
     
 }
@@ -47,7 +47,7 @@ body {
 .ui-widget-header {
     background: none !important;
     border: none;
-    border-bottom: 3px solid #FF851B;
+    border-bottom: 2px solid #FF851B;
     border-radius: 0;
 }
 
@@ -58,13 +58,32 @@ body {
 
 .ui-state-active {
     border-color: #FF851B !important;
-    border-width: 3px 3px 0 3px !important;
-    margin-bottom: -3px  !important;
-    padding-bottom: 3px  !important;
+    border-width: 2px 2px 0 2px !important;
+    margin-bottom: -2px  !important;
+    padding-bottom: 2px  !important;
 }
 
 .ui-state-default {
     border-color: #FF851B !important;
-    border-width: 3px 3px 0 3px !important;
+    border-width: 2px 2px 0 2px !important;
+    color: black !important;
 }
+
+.ui-state-hover {
+    background-color: white !important;
+    background-image: none !important;
+}
+
+.ui-state-default a {
+    color: #777 !important;
+}
+
+.ui-state-active a {
+    color: #FF851B !important;
+}
+
+.ui-state-hover a {
+    color: #FF851B !important;
+}
+
     
