@@ -1,0 +1,70 @@
+body {
+    margin: 0;
+    font-family: Candara,Calibri,Segoe,Segoe UI,Optima,Arial,sans-serif; 
+    background:  #f6f6f6;
+}
+
+#header {
+    background-color: #FF851B;
+    padding: 1em;
+    min-width: 640px;
+        
+}
+
+#logo {
+    text-decoration: none;
+    font-size: 1.6em;
+    font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+    font-weight: bold;
+    color: white;
+}
+
+#search_block {
+    padding-top: 0.2em;
+    float: right;
+    
+}
+
+#footer {
+    clear: both;
+    margin-top: 1em;
+    padding: .5em;
+    border-top-style: solid;
+    border-top-width: 3px;
+    border-top-color: #FF851B;
+    
+}
+
+.ui-widget-content {
+    background:  none !important;
+    border: none !important;
+}
+
+.ui-tabs .ui-tabs-panel {
+    background:  white !important;
+}
+
+.ui-widget-header {
+    background: none !important;
+    border: none;
+    border-bottom: 3px solid #FF851B;
+    border-radius: 0;
+}
+
+.ui-state-active :focus {
+    outline-width: 0;
+     outline: none;
+}
+
+.ui-state-active {
+    border-color: #FF851B !important;
+    border-width: 3px 3px 0 3px !important;
+    margin-bottom: -3px  !important;
+    padding-bottom: 3px  !important;
+}
+
+.ui-state-default {
+    border-color: #FF851B !important;
+    border-width: 3px 3px 0 3px !important;
+}
+    
