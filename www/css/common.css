@@ -25,6 +25,18 @@ body {
     
 }
 
+#stat {
+    float: right;
+    padding-right: 1em;
+    visibility: hidden;
+/*    display: none;*/
+    clear: both;
+}
+
+#tabs {
+    clear: both;
+}
+
 #footer {
     clear: both;
     margin-top: 1em;
