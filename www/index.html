@@ -18,6 +18,7 @@
     
     
 <body>
+<div class="wrapper">
 
 <div id="header">
     
@@ -82,13 +83,49 @@
           <span class="small">You can search for ASCII name or hexadecimal value (0x...)</span>
       </div>
       
+    
+      <div id="actions">
+          <div id="actions_home">
+              <div id="domain_status"></div></br>
+              
+              <button disabled id="btn_act_claim">Claim</button><br>
+              <button disabled id="btn_act_prolong">Prolong</button><br>
+              <button disabled id="btn_act_sell">Put For Sale</button><br>
+              <button disabled id="btn_act_transfer">Transfer</button><br>
+              
+              
+          </div>
+          
+      </div>
+    
+    
+    
       <div id="domain_result">
+          
+          <h1>Domain Information</h1>
           Domain Name (ASCII): <span id="domain_ascii"></span></br>
           Domain Name (HEX): <span id="domain_hex"></span></br>
           Owner: <span id="domain_owner"></span></br>
           Expires in: <span id="domain_expires"> 0 </span> blocks</br>
           Price: <span id="domain_price"></span></br>
           Transfer Address: <span id="domain_transfer"></span></br>
+
+          <h1 id="ids">Domain ID's</h1>
+
+        <div class="right"><button disabled id="btn_act_new_id">Add New ID</button></div>
+
+         <table id="ids">
+             <tr>
+                 <td>ID(ASCII)</td>
+                 <td>ID(HEX)</td>
+                 <td>Value(ASCII)</td>
+                 <td>Value(Hex)</td>
+                 <td>Action</td>
+             </tr>
+                
+         </table>
+
+    
       </div>
       
       
@@ -110,6 +147,7 @@
     
 </div>
 
+</div><!-- wrapper-->
     
 </body>
     

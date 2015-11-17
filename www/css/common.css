@@ -5,10 +5,18 @@ body {
 /*    background:  #f6f6f6;*/
 }
 
+.wrapper {
+    width: 100%;
+    min-width: 800px;
+}
+
+.right {
+    text-align: right;
+}
+
 #header {
     background-color: #FF851B;
     padding: 1em;
-    min-width: 640px;
         
 }
 
@@ -113,4 +121,42 @@ div#search_domain {
     padding: 1em;
 }
 
+#actions {
+    float: right;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #FF851B;    
+    padding: 1em;
+}
+
+
+#domain_status {
+    text-align: center;
+    color: #FF851B;
+    padding: 0.2em;
+    font-size: 1.2em;
+}
+
+#tabs-domain button{
+    margin: 0.2em;
+}
+
+h1 {
+    color: #FF851B;
+    font-size: 1.2em;
+}
+
+h1#ids {
+    clear: both;
+}
+
+table#ids {
+    width: 100%;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #FF851B;    
+    
+}
     
