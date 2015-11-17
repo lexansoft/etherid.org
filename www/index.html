@@ -2,6 +2,7 @@
 <head>
 
 <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">    
+<link rel="stylesheet" type="text/css" href="css/sweetalert.css">    
 <link rel="stylesheet" type="text/css" href="css/common.css">    
 <title>EtherId</title>
 
@@ -10,6 +11,7 @@
 <script src="js/web3.min.js"></script>    
 <script src="js/sweetalert.min.js"></script>    
 <script src="js/common.js"></script>    
+<script src="js/bignumber.js"></script>    
     
 </head>
 
@@ -22,7 +24,7 @@
 <a id="logo" href="http://etherid.org">EtherId.org</a>
 
 <div id="search_block">
-    <input size="40" id="search"> <button id="btn_search">Search</button>
+    <input size="40" id="search"></input> <button id="btn_search">Search</button>
 </div>
     
 </div>    
@@ -36,7 +38,7 @@
 <div id="tabs">
   <ul>
     <li><a href="#tabs-info">Info</a></li>
-    <li><a href="#tabs-domain">Domain</a></li>
+    <li><a href="#tabs-domain">Register/Manage Domain</a></li>
     <li><a href="#tabs-my">My Domains</a></li>
     <li><a href="#tabs-4sale">For Sale</a></li>
   </ul>
@@ -70,13 +72,26 @@
     </p>
   </div>
   <div id="tabs-domain">
-    <p</p>
+
+      <div id="search_domain">
+          <input size="40" id="search_domain"></input> <button id="btn_search_domain">Search</button><br>
+          <span class="small">You can search for ASCII name or hexadecimal value (0x...)</span>
+      </div>
+      
+      <div id="domain_result">
+          Domain Name (ASCII): <span id="domain_ascii"></span></br>
+          Domain Name (HEX): <span id="domain_hex"></span></br>
+          Owner: <span id="domain_owner"></span></br>
+          Expires in: <span id="domain_price"> 0 </span> blocks</br>
+          Price: <span id="domain_price"></span></br>
+          
+      </div>
+      
+      
   </div>
   <div id="tabs-my">
-    <p></p>
   </div>
   <div id="tabs-4sale">
-    <p></p>
     
   </div>
 </div>
@@ -85,9 +100,9 @@
     
 <div id="footer">
     
- <a href="https://twitter.com/alexna" target="_blank" class="twitter">
-                <img src="images/twittericon.png" style="vertical-align:middle"> 
-    Alexandre Naverniouk          </a>
+<a href="https://twitter.com/alexna" target="_blank" class="twitter">
+    <img src="images/twittericon.png" style="vertical-align:middle"> Alexandre Naverniouk 
+</a>
     
 </div>
 

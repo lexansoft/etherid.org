@@ -1,6 +1,7 @@
 body {
     margin: 0;
-    font-family: Candara,Calibri,Segoe,Segoe UI,Optima,Arial,sans-serif; 
+/*    font-family: Candara,Calibri,Segoe,Segoe UI,Optima,Arial,sans-serif; */
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
 /*    background:  #f6f6f6;*/
 }
 
@@ -9,6 +10,10 @@ body {
     padding: 1em;
     min-width: 640px;
         
+}
+
+.small {
+    font-size: 0.8em;
 }
 
 #logo {
@@ -45,6 +50,11 @@ body {
     border-top-width: 2px;
     border-top-color: #FF851B;
     
+}
+
+.ui-widget {
+    font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
+    font-size: 1em;
 }
 
 .ui-widget-content {
@@ -96,6 +106,10 @@ body {
 
 .ui-state-hover a {
     color: #FF851B !important;
+}
+
+#search_domain {
+    text-align: center;
 }
 
     
