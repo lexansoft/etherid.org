@@ -18,9 +18,10 @@
     (def "T_OWNER"      0x1 )
     (def "T_EXPIRES"    0x2 )
     (def "T_PRICE"      0x3 )
-    (def "T_ID_DOMAIN"  0x4 )
-    (def "T_ID_ID"      0x5 )
-    (def "T_ID_VALUE"   0x6 )
+    (def "T_TRANSFER"   0x4 )
+    (def "T_ID_DOMAIN"  0x5 )
+    (def "T_ID_ID"      0x6 )
+    (def "T_ID_VALUE"   0x7 )
 
 
 ; Initialization
@@ -58,6 +59,7 @@
         (def "txDomain"     (calldataload 0x20) )
         (def "txProlong"    (calldataload 0x40) )
         (def "txPrice"      (calldataload 0x60) )
+        (def "txTransfer"   (calldataload 0x80) )
 
         [ found ] 0
         [ ptr ] table_offset 
@@ -70,15 +72,36 @@
                 (when 
                     (|| 
                         (= @@ (+ @ptr T_OWNER ) ( caller ) )        ; is mine
-                        (> ( callvalue ) @@ (+ @ptr T_PRICE ) )  ; has enough money 
+                        (||
+                            (> (NUMBER) @@ (+ @ptr T_EXPIRE ) )     ; expired
+                            (&&
+                                (&&
+                                    (> @@ (+ @ptr T_PRICE ) 0 )             ; price > 0  
+                                    (> ( callvalue ) @@ (+ @ptr T_PRICE ) ) ; has enough money 
+                                )
+                                (|| 
+                                    (= @@ (+ @ptr T_TRANSFER ) 0 )          ; no transfer address
+                                    (= @@ (+ @ptr T_TRANSFER ) ( caller ) ) ; transfer receiver called
+                                )
+                             )
+                         )
                     )
                 {
-                    (when (!= @@ (+ @ptr T_OWNER ) ( caller ) )       ; transfering to the new owner
+                    (if
+                        
+                        (!= @@ (+ @ptr T_OWNER ) ( caller ) )       ; transfering to the new owner
                     {
-                        (send 0x303 @@ (+ @ptr T_OWNER ) @@ (+ @ptr T_PRICE ) ) ; transfer needed money
-                        [ tx_value_used ] @@ (+ @ptr T_PRICE )      ; remember how much used
+                        (when (<= (NUMBER) @@ (+ @ptr T_EXPIRE ) )  { ; only pay if not expired
+                            (send 0x303 @@ (+ @ptr T_OWNER ) @@ (+ @ptr T_PRICE ) ) ; transfer needed money
+                            [ tx_value_used ] @@ (+ @ptr T_PRICE )      ; remember how much used
+                        })
                         [[ (+ @ptr T_OWNER) ]] ( caller )           ; put new owner
+                        [[ (+ @ptr T_PRICE) ]] 0                    ; reset price
+                        [[ (+ @ptr T_TRANSFER) ]] 0                 ; reset transfer address
+                    } ; else
+                    {
                         [[ (+ @ptr T_PRICE) ]] txPrice              ; set new price
+                        [[ (+ @ptr T_TRANSFER) ]] txTransfer        ; set new transfer address
                     })
                  
                     [ n ] txProlong  ; prolong time in blocks           
@@ -89,7 +112,7 @@
                 })
             })
 
-            [ ptr ] (+ @ptr 7 )
+            [ ptr ] (+ @ptr 8 )
         })        
         
         (when (= @found 0) ; not found in the table
@@ -98,6 +121,7 @@
                 [[ (+ @ptr T_DOMAIN) ]] txDomain
                 [[ (+ @ptr T_OWNER) ]]  ( caller )
                 [[ (+ @ptr T_PRICE) ]] txPrice
+                [[ (+ @ptr T_TRANSFER) ]] txTransfer        ; set new transfer address
                     
                 [ n ] txProlong  ; prolong time in blocks           
                 (when (> @n MAX_PROLONG ) { 
@@ -137,7 +161,7 @@
                 })
             })
 
-            [ ptr ] (+ @ptr 7 )
+            [ ptr ] (+ @ptr 8 )
         })        
         
         (when (= @can_change 1) 

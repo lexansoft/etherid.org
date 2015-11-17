@@ -108,8 +108,9 @@ body {
     color: #FF851B !important;
 }
 
-#search_domain {
+div#search_domain {
     text-align: center;
+    padding: 1em;
 }
 
     
