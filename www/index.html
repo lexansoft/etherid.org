@@ -8,10 +8,11 @@
 
 <script src="js/jquery-2.1.3.min.js"></script>    
 <script src="js/jquery-ui.min.js"></script>    
-<script src="js/web3.min.js"></script>    
+<script src="js/web3.min.js"></script>   
 <script src="js/sweetalert.min.js"></script>    
-<script src="js/common.js"></script>    
 <script src="js/bignumber.js"></script>    
+<script src="js/utf8.js"></script>    
+<script src="js/common.js"></script>    
     
 </head>
 
@@ -49,7 +50,7 @@
       
         <ul>
             <li>
-                You can register a Domain name for your Ethereum account for some period of time. The maximum time is 2,000,000 Ehtereum blocks ( about a year )
+                You can register a Domain name for your Ethereum account for some period of time. The maximum time is 2,000,000 Ehtereum blocks ( about a year ) The domain name is in fact a binary 32 byte value. It is UTF8 representaion of the symbolic name.
             </li>
             <li>
                 At any moment while you own a domain you can prolong the ownershp.
@@ -85,15 +86,24 @@
       
     
       <div id="actions">
-          <div id="actions_home">
-              <div id="domain_status"></div></br>
+          <div class="action_pan" id="action_home">
+              <h1 id="domain_status">Unknown</h1>
               
               <button disabled id="btn_act_claim">Claim</button><br>
+              <button disabled id="btn_act_buy">Buy</button><br>
               <button disabled id="btn_act_prolong">Prolong</button><br>
               <button disabled id="btn_act_sell">Put For Sale</button><br>
               <button disabled id="btn_act_transfer">Transfer</button><br>
+          </div>
+          <div class="action_pan" id="action_claim">
+              <h1>Claiming Domain</h1>
+    
+              Address to use:
               
+              <select id="act_claim_my_address"></select><br>
               
+              <button id="btn_act_cancel">Cancel</button> 
+              <button id="btn_act_claim_domain">Claim Domain</button><br>
           </div>
           
       </div>
@@ -103,7 +113,7 @@
       <div id="domain_result">
           
           <h1>Domain Information</h1>
-          Domain Name (ASCII): <span id="domain_ascii"></span></br>
+          Domain Name: <span id="domain_ascii"></span></br>
           Domain Name (HEX): <span id="domain_hex"></span></br>
           Owner: <span id="domain_owner"></span></br>
           Expires in: <span id="domain_expires"> 0 </span> blocks</br>
@@ -116,9 +126,9 @@
 
          <table id="ids">
              <tr>
-                 <td>ID(ASCII)</td>
+                 <td>ID</td>
                  <td>ID(HEX)</td>
-                 <td>Value(ASCII)</td>
+                 <td>Value</td>
                  <td>Value(Hex)</td>
                  <td>Action</td>
              </tr>

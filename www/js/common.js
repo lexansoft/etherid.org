@@ -5,6 +5,9 @@ ids = new Array()
 
 web3 = require('web3');
 
+ETH1 = new BigNumber( 1000000000000000000 );    
+ETH_SIGN = "\u{1D763}"
+
 
 $().ready( function(e){ 
     $( "#tabs" ).tabs(
@@ -31,19 +34,18 @@ $().ready( function(e){
         hex = ""
         ascii = ""
 
-        if( s.substring( 0, 2 ) == "0x" ) 
+        if( s.substring( 0, 2 ) === "0x" ) 
         {    
             a = hexToArray( s )
             hex = arrayToHex( a )    
-            
             hex = "0x" + hex.substr( 0, 64 )
-            ascii = toAscii( hex )
+            ascii = utf8.decode( toAscii( hex ) ) 
         }
         else
         {
-            s = s.substr( 0, 32 )
-            ascii = s
-            hex = "0x" + asciiToHex( s ) 
+            utf = utf8.encode( s ).slice(0, 32);
+            hex = "0x" + asciiToHex( utf )    
+            ascii = utf8.decode( utf ) 
         }
         
         domain = { "domain": hex }
@@ -63,27 +65,140 @@ $().ready( function(e){
 
     })
     
+    $("#btn_act_claim").click( function() {
+        openActionPan( "claim"); 
+        
+        my_accounts = web3.eth.accounts;      
+        
+        for( var i = 0; i < my_accounts.length; i++ )
+        $("#act_claim_my_address")
+            .append( $("<option>").val( my_accounts[i] ).text( 
+                no0x(my_accounts[i]) + 
+                " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
+            ) );        
+        
+        
+    })
     
+    $("#btn_act_cancel").click( function() {
+        openActionPan( "home"); 
+    })
     
 } )
 
-function  updateDomainPage( domain )
+function no0x(a)
 {
+    if( a.substr( 0, 2 ) == "0x" ) { a = a.substr( 2 ); }
+    return a;
+}
+ 
+
+function formatEther( v, t )
+{
+    n = new BigNumber( v );
     
-    $("#domain_hex").text( domain.domain );
-    $("#domain_ascii").text( ascii = toAscii( domain.domain ) );
-    $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
-    $("#domain_expires").text( domain.expires );
-    $("#domain_price").text( domain.price ? domain.price : "NOT FOR SALE" );
-    $("#domain_transfer").text( domain.transfer );
+    if( t == "ETH" )
+    {
+        //return n.div( ETH1 ).toNumber() + "Ξ"; 
+        return ETH_SIGN + n.div( ETH1 ).toNumber(); 
+    }
+
+    if( t == "ETH2" )
+    {
+        //return n.div( ETH1 ).toNumber() + "Ξ"; 
+        return ETH_SIGN + n.div( ETH1 ).toFixed( 2 ); 
+    }
+    
+    if( n.e < 3 ) { return n + " wei"; }
+    if( n.e < 6 ) { return n.div( new BigNumber( "1000" ) ) + " Kwei"; }
+    if( n.e < 9 ) { return n.div( new BigNumber( "1000000" ) ) + " Mwei"; }
+    if( n.e < 12 ) { return n.div( new BigNumber( "1000000000" ) ) + " Gwei"; }
+    if( n.e < 15 ) { return n.div( new BigNumber( "1000000000000" ) ) + " szabo"; }
+    if( n.e < 18 ) { return n.div( new BigNumber( "1000000000000000" ) ) + " finney"; }
+    //if( n.e < 21 ) { return n.div( new BigNumber( "1000000000000000000" ) ) + " ether"; }
+    return n.div( ETH1 ) + " ether"; 
+}
+
+function  openActionPan( pan )
+{
+    current_pan = $( ".action_pan:visible" ).fadeOut( 200, function() {
+        $( "#action_" + pan ).fadeIn( 200 );
+    });
     
     
 }
 
 
+function  updateDomainPage( domain )
+{
+    $("#domain_hex").text( domain.domain );
+    $("#domain_ascii").text( ascii = utf8.decode( toAscii( domain.domain ) ) );
+    $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
+    $("#domain_expires").text( domain.expires );
+    $("#domain_price").text( domain.price ? domain.price : "NOT FOR SALE" );
+    $("#domain_transfer").text( domain.transfer );
+
+    
+    var my_accounts = []
+    var current_block = 0;
+    
+    try 
+    {
+        web3.setProvider( new web3.providers.HttpProvider( ) );    
+        current_block =  web3.eth.getBlock( "latest" ).number;
+        my_accounts = web3.eth.accounts;
+    }
+    catch( e )
+    {
+        swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client.", "error")
+        return;
+    }
+    
+    // Deturmine the status
+    
+    var available = domain.owner == undefined || domain.owner == ""
+    var on_sale = domain.price == undefined || domain.price == 0
+    var expired = domain.expires < current_block
+    var mine = false;
+    if( !available ) {
+        for( var i = 0; i < my_accounts.length; i++ )
+        {
+            if( areHexEq( my_accounts[i], domain.owner ) ) { mine = true; break; }
+        }
+    }
+    
+    var on_sale = domain.price > 0
+    var forme = false;
+    for( var i = 0; i < my_accounts.length; i++ )
+    {
+        if( areHexEq( my_accounts[i], domain.transfer ) ) { mine = true; break; }
+    }
+    
+    $('#btn_act_claim').prop('disabled', !( expired || available ) );
+    $('#btn_act_buy').prop('disabled', !( !mine && ( on_sale || forme ) ) );
+    $('#btn_act_prolong').prop('disabled', !mine );
+    $('#btn_act_sell').prop('disabled', !mine );
+    $('#btn_act_transfer').prop('disabled', !mine );
+    
+    
+    status = "Unknown"
+    
+    if( on_sale ) status = "On Sale"
+    if( available ) status = "Available"
+    if( expired ) status = "Expired"
+    if( mine ) status = "My Domain"
+    
+    
+    $('#domain_status').text( status )
+    
+    
+}
 
 function areHexEq( a, b )
 {
+    if( a == undefined ) return false
+    if( b == undefined ) return false
+    
     var aa = a;
     if( aa.substr( 0, 2 ) == "0x" ) aa = aa.substr( 2 );
     while( aa.charAt( 0 ) == '0' ) { aa = aa.substr( 1 ); }
