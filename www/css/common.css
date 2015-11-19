@@ -186,3 +186,8 @@ table#ids {
 {
     display: block
 }
+
+#action_claim #buttons
+{
+    padding-top: 0.5em;
+}

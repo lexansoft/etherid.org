@@ -2,6 +2,7 @@ ETHERID_CONTRACT = "0xe54940974aee76fadda804b5a50cca3ec5494455"
 
 domains = new Array()
 ids = new Array()
+current_domain = {}
 
 web3 = require('web3');
 
@@ -70,6 +71,8 @@ $().ready( function(e){
         
         my_accounts = web3.eth.accounts;      
         
+        $("#act_claim_my_address").empty();
+        
         for( var i = 0; i < my_accounts.length; i++ )
         $("#act_claim_my_address")
             .append( $("<option>").val( my_accounts[i] ).text( 
@@ -77,6 +80,8 @@ $().ready( function(e){
                 " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
             ) );        
         
+        lua = Cookies.get('etherid_last_used_address'); 
+        if( lua ) $("#act_claim_my_address").val( lua )
         
     })
     
@@ -84,6 +89,58 @@ $().ready( function(e){
         openActionPan( "home"); 
     })
     
+    $("#btn_act_claim_domain").click( function() {
+        
+        current_domain.expires = $("#action_claim #expires").val()
+        
+        if( current_domain.expires < 1000 ) current_domain.expires = 1000;
+        if( current_domain.expires > 2000000 ) current_domain.expires = 2000000;
+        
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to claim the domain (" + current_domain.domain + 
+                    " ). Your ownership will expire in " + current_domain.expires + " blocks."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, claim!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = $("#act_claim_my_address").val()       
+                    
+                    Cookies.set('etherid_last_used_address', wallet_to_use ); 
+                    
+                    web3.setProvider( new web3.providers.HttpProvider( ) );    
+                    gp = web3.eth.gasPrice;
+                    
+                    var params = {
+                                gas: 200000,
+                                gasPrice : gp,
+                                from : wallet_to_use,
+                                to: ETHERID_CONTRACT,
+                                value: 0,
+                                data: makeData( [
+                                    "domain",
+                                    current_domain.expires,
+                                    0,
+                                    0 
+                                ] )
+                            };
+
+                    tx = web3.eth.sendTransaction( params );
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }            
+                swal("Your claim is complete!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               }
+        )
+    })
 } )
 
 function no0x(a)
@@ -191,6 +248,7 @@ function  updateDomainPage( domain )
     
     $('#domain_status').text( status )
     
+    current_domain = domain
     
 }
 
@@ -319,4 +377,77 @@ function hexToArray( s )
     return r;
 }
 
+function makeData( arr )
+{
+    var d = "";
+    
+    for( var i = 0; i < arr.length; i++ )
+    {
+        var n = arr[i];
+        var nv = "";
+        
+//        log( "### " + n + " type: " + ( typeof n ) + " isBigNumber: " + (n instanceof BigNumber) ); 
+        
+        
+        if( typeof n == "string" ) 
+        {
+            if( n.length > 32 )
+            {
+                logError( "makeDir: too long string: " + n );
+                return "";
+            }
+            
+            for( var j = 0; j < n.length; j++ )
+            {
+                var c = n.charCodeAt( j ) & 0xFF;
+                nv +=(( c < 16) ? "0":"") + c.toString(16);
+            }
+            
+            while( nv.length < 32 * 2 ) { nv += "00"; }
+        }
+        
+        if( typeof n == "number"  || n instanceof BigNumber )
+        {
+            nv = web3.toHex( n );
+            if( nv.indexOf( '0x' ) == 0 ) nv = nv.substr( 2 );
+            if( nv.indexOf( '-0x' ) == 0 ) nv = nv.substr( 3 );
+            
+            if( nv.length % 2 ) { nv = "0" + nv; }
+
+            if( nv.length > 32 * 2 )
+            {
+                logError( "makeDir: too big number: " + n );
+                return "";
+            }
+            while( nv.length < 32 * 2 ) { nv = "00" + nv; }
+        }
+        
+        if( typeof n == "object" && n.constructor === int256 )
+        {
+            nv = n.toHex();
+        }
+        
+        
+        if( $.isArray( n ) )
+        {
+            nv = arrayToHex( n );
+            var needed_length = Math.floor( ( nv.length + 63 ) / 64 ) * 64;
+            while( nv.length < needed_length ) { nv += "00"; }
+        }
+        
+        if( typeof n == "object" && n.constructor === Int8Array )
+        {
+            nv = arrayToHex( n );
+            var needed_length = Math.floor( ( nv.length + 63 ) / 64 ) * 64;
+            while( nv.length < needed_length ) { nv += "00"; }
+        }
+        
+        if( nv.indexOf( '0x' ) == 0 ) nv = nv.substr( 2 );
+        if( nv.indexOf( '-0x' ) == 0 ) nv = nv.substr( 3 );
+        d += nv;
+    }
+    
+    //return "0x" + d;
+    return d;
+}
 

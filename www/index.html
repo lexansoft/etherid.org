@@ -12,6 +12,7 @@
 <script src="js/sweetalert.min.js"></script>    
 <script src="js/bignumber.js"></script>    
 <script src="js/utf8.js"></script>    
+<script src="js/cookies.min.js"></script>    
 <script src="js/common.js"></script>    
     
 </head>
@@ -100,10 +101,20 @@
     
               Address to use:
               
-              <select id="act_claim_my_address"></select><br>
+              <select id="act_claim_my_address"></select>
               
-              <button id="btn_act_cancel">Cancel</button> 
-              <button id="btn_act_claim_domain">Claim Domain</button><br>
+              <div class="small">This address will be registered as owner of the domain.</div>              
+              
+              <div>
+                  <BR>
+                  Expires in <input size="12" id="expires" value="2000000"></input> blocks.
+                  <div class="small">Maximum value is 2000000 blocks that is approximately 1 year.</div>              
+              </div>
+              
+              <div id="buttons">
+                  <button id="btn_act_cancel">Cancel</button> 
+                  <button id="btn_act_claim_domain">Claim Domain</button><br>
+              </div>
           </div>
           
       </div>
