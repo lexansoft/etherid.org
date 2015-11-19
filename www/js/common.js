@@ -25,6 +25,11 @@ $().ready( function(e){
     );    
     
     
+    $("#btn_refresh").click( function() {
+        refresh_lists();
+    })
+    
+    
     $("input#search_domain").keyup(function( event ) {
         if( event.keyCode == 13 ) $("#btn_search_domain").click()
     });
@@ -49,10 +54,12 @@ $().ready( function(e){
             ascii = utf8.decode( utf ) 
         }
         
+        
+        hex = remove0Prefix( hex )
         domain = { "domain": hex }
 
-        for( var i; i < domains.length; i++ ) {
-            if( areHexEq( domains[i].domain, hex ) ) {
+        for( var i = 0; i < domains.length; i++ ) {
+            if( domains[i].domain == hex ) {
                domain = domains[i]
                break
             }
@@ -124,6 +131,7 @@ $().ready( function(e){
                                 value: 0,
                                 data: makeData( [
                                     "domain",
+                                    new BigNumber( current_domain.domain ),
                                     current_domain.expires,
                                     0,
                                     0 
@@ -193,7 +201,7 @@ function  updateDomainPage( domain )
     $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
     $("#domain_expires").text( domain.expires );
     $("#domain_price").text( domain.price ? domain.price : "NOT FOR SALE" );
-    $("#domain_transfer").text( domain.transfer );
+    $("#domain_transfer").text( domain.transfer == "0x00" ? "" : domain.transfer );
 
     
     var my_accounts = []
@@ -236,6 +244,7 @@ function  updateDomainPage( domain )
     $('#btn_act_prolong').prop('disabled', !mine );
     $('#btn_act_sell').prop('disabled', !mine );
     $('#btn_act_transfer').prop('disabled', !mine );
+    $('#btn_act_new_id').prop('disabled', !mine );
     
     
     status = "Unknown"
@@ -309,10 +318,10 @@ function refresh_lists()
     }    
     
     n_domains = web3.toDecimal ( web3.eth.getStorageAt( ETHERID_CONTRACT,  2 ) );
-    $( "stat_domains" ).text( n_domains );
+    $( "#stat_domains" ).text( n_domains );
     
     n_ids = web3.toDecimal ( web3.eth.getStorageAt( ETHERID_CONTRACT,  3 ) );
-    $( "stat_ids" ).text( n_ids );
+    $( "#stat_ids" ).text( n_ids );
     
     table_offset = 0x100;
     
@@ -321,11 +330,11 @@ function refresh_lists()
     {
         domains.push( 
             { 
-                'domain': web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i ),
-                'owner' : web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 1 ),
+                'domain': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i ) ),
+                'owner' : remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 1 ) ),
                 'expires': web3.toDecimal( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 2 ) ),
                 'price': new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 3 ) ),
-                'transfer': web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 4 ) 
+                'transfer': remove0Prefix(web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 4 ) )
             }
         )
     }
@@ -335,13 +344,14 @@ function refresh_lists()
     {
         domains.push( 
             { 
-                'domain': web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 5),
+                'domain': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 5) ),
                 'id' : new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 6 ) ),
                 'value': new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 7 ) )
             }
         )
     }
 }
+
 
 function arrayToHex( arr ) {
     var str ='';
@@ -361,6 +371,25 @@ function asciiToHex( arr ) {
     return str;
 }   
     
+function remove0Prefix( s )
+{
+    if( s.substr( 0, 2 ) == "0x" ) { s = s.substr( 2 ); }
+    
+    while( s.length > 2 && s.substr( 0, 2 ) == "00" ) { s = s.substr( 2 ); }
+    
+    return "0x" + s
+    
+}
+
+function remove0Postfix( s )
+{
+    if( s.substr( 0, 2 ) == "0x" ) { s = s.substr( 2 ); }
+    
+    while( s.length > 2 && s.substr( s.length - 2 , 2 ) == "00" ) { s = s.substr( 0, s.length - 2 ); }
+    
+    return "0x" + s
+    
+}
 
 function hexToArray( s )
 {
