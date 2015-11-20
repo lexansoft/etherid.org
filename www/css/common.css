@@ -15,7 +15,7 @@ body {
 }
 
 #header {
-    background-color: #FF851B;
+    background-color: #39CCCC ; 
     padding: 1em;
         
 }
@@ -61,7 +61,7 @@ div.small {
     padding: .5em;
     border-top-style: solid;
     border-top-width: 2px;
-    border-top-color: #FF851B;
+    border-top-color: #39CCCC;
     
 }
 
@@ -82,7 +82,7 @@ div.small {
 .ui-widget-header {
     background: none !important;
     border: none;
-    border-bottom: 2px solid #FF851B;
+    border-bottom: 2px solid #39CCCC;
     border-radius: 0;
 }
 
@@ -92,14 +92,14 @@ div.small {
 }
 
 .ui-state-active {
-    border-color: #FF851B !important;
+    border-color: #39CCCC !important;
     border-width: 2px 2px 0 2px !important;
     margin-bottom: -2px  !important;
     padding-bottom: 2px  !important;
 }
 
 .ui-state-default {
-    border-color: #FF851B !important;
+    border-color: #39CCCC !important;
     border-width: 2px 2px 0 2px !important;
     color: black !important;
 }
@@ -114,11 +114,11 @@ div.small {
 }
 
 .ui-state-active a {
-    color: #FF851B !important;
+    color: #39CCCC !important;
 }
 
 .ui-state-hover a {
-    color: #FF851B !important;
+    color: #39CCCC !important;
 }
 
 div#search_domain {
@@ -131,7 +131,7 @@ div#search_domain {
     border-radius: 5px;
     border-style: solid;
     border-width: 2px;
-    border-color: #FF851B;    
+    border-color: #39CCCC;    
     padding: 0;
     width: 26em;
     height: 13.5em;
@@ -156,7 +156,7 @@ input#transfer {
 }
 
 #domain_status {
-    color: #FF851B;
+    color: #39CCCC;
     padding: 0.1em;
     font-size: 1.2em;
 }
@@ -166,7 +166,7 @@ input#transfer {
 }
 
 h1 {
-    color: #FF851B;
+    color: #39CCCC;
     font-size: 1.2em;
 }
 
@@ -179,7 +179,7 @@ table#ids {
     border-radius: 5px;
     border-style: solid;
     border-width: 2px;
-    border-color: #FF851B;    
+    border-color: #39CCCC;    
     
 }
     

@@ -410,6 +410,55 @@ $().ready( function(e){
         )
     })
     
+    
+    $("#btn_act_new_id").click( function() {
+        
+        swal(
+        {   
+            title: "New ID",   
+            text: "Please specify new ID name. You can use 0xNNN notation to enter a hexadecimal value.",   
+            type: "input",   
+            showCancelButton: true,   
+            closeOnConfirm: false,   
+            animation: "slide-from-top",   
+            inputPlaceholder: "ID Name" 
+        }, 
+        function(inputValue)
+        {   
+            if (inputValue === false) return false;      
+            if (inputValue === "") 
+            {     
+                swal.showInputError("You need to specify ID name!");     
+                return false   
+            }      
+            
+            swal(
+            {   
+                title: "ID Value",   
+                text: "Please specify the value. You can use 0xNNN notation to enter a hexadecimal value.",   
+                type: "input",   
+                showCancelButton: true,   
+                closeOnConfirm: false,   
+                animation: "slide-from-top",   
+                inputPlaceholder: "0" 
+            }, 
+            function(inputValue)
+            {   
+                if (inputValue === false) return false;      
+                if (inputValue === "") 
+                {     
+                    swal.showInputError("You need to specify value!");     
+                    return false   
+                }      
+
+
+                swal("Nice!", "You wrote: " + inputValue, "success"); 
+            });        
+        });        
+        
+    })
+    
+    
 } )
 
 function no0x(a)
