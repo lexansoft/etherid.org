@@ -219,6 +219,11 @@
 
     })
 
+    ;!!!!! 
+    ; Ability to kill the contract is here only for debugging.
+    ; The actual contract will not have it, so even the owner of the contract 
+    ; will not be able to remove the contract from the Ethereum blockchin
+
     ( when (&& @is_admin (= txCommand "kill") ) {
             (suicide @@owner)
     })

@@ -109,16 +109,16 @@ $().ready( function(e){
 
     $("#btn_act_claim_domain").click( function() {
         
-        current_domain.expires = $("#action_claim #expires").val()
+        expires = $("#action_claim #expires").val()
         
-        if( current_domain.expires < 1000 ) current_domain.expires = 1000;
-        if( current_domain.expires > 2000000 ) current_domain.expires = 2000000;
+        if( expires < 1000 ) expires = 1000;
+        if( expires > 2000000 ) expires = 2000000;
         
         
         swal({   
             title: "Are you sure?",   
             text: "You are about to claim the domain (" + current_domain.domain + 
-                    " ). Your ownership will expire in " + current_domain.expires + " blocks."  ,   
+                    " ). Your ownership will expire in " + expires + " blocks."  ,   
             type: "warning",   
             showCancelButton: true,   
             confirmButtonText: "Yes, claim!",
@@ -143,7 +143,7 @@ $().ready( function(e){
                                 data: makeData( [
                                     "domain",
                                     new BigNumber( current_domain.domain ),
-                                    current_domain.expires,
+                                    expires,
                                     0,
                                     0 
                                 ] )
@@ -158,6 +158,82 @@ $().ready( function(e){
                 }            
                 swal("Your claim is complete!", 
                      "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               
+                openActionPan( "home"); 
+            }
+        )
+    })
+
+    $("#btn_act_buy").click( function() {
+        openActionPan( "buy"); 
+        
+        my_accounts = web3.eth.accounts;      
+        
+        $("#act_buy_my_address").empty();
+        
+        for( var i = 0; i < my_accounts.length; i++ )
+        $("#act_buy_my_address")
+            .append( $("<option>").val( my_accounts[i] ).text( 
+                no0x(my_accounts[i]) + 
+                " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
+            ) );        
+        
+        lua = Cookies.get('etherid_last_used_address'); 
+        if( lua ) $("#act_buy_my_address").val( lua )
+        
+    })
+
+    $("#btn_act_buy_domain").click( function() {
+        
+        expires = $("#action_buy #expires").val()
+        
+        if( expires < 1000 ) expires = 1000;
+        if( expires > 2000000 ) expires = 2000000;
+        
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to buy the domain (" + current_domain.domain + 
+                    " ) for " + formatEther( current_domain.price, "ETH") + ". Your ownership will expire in " + expires + " blocks."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, buy!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = $("#act_buy_my_address").val()       
+                    
+                    Cookies.set('etherid_last_used_address', wallet_to_use ); 
+                    
+                    web3.setProvider( new web3.providers.HttpProvider( ) );    
+                    gp = web3.eth.gasPrice;
+                    
+                    var params = {
+                                gas: 200000,
+                                gasPrice : gp,
+                                from : wallet_to_use,
+                                to: ETHERID_CONTRACT,
+                                value: current_domain.price,
+                                data: makeData( [
+                                    "domain",
+                                    new BigNumber( current_domain.domain ),
+                                    expires,
+                                    0,
+                                    0 
+                                ] )
+                            };
+
+                    tx = web3.eth.sendTransaction( params );
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }            
+                swal("You bought the domain!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction." +
+                     " If for some reason the ownership will not transfer, for example is you do not have enough funds on your address, then all your spent amount will be transfered back to you.", "success");               
                 openActionPan( "home"); 
             }
         )
@@ -453,6 +529,7 @@ function  updateDomainPage( domain )
     
     $('#btn_act_claim').prop('disabled', !( expired || available ) );
     $('#btn_act_buy').prop('disabled', !( !mine && ( on_sale || forme ) ) );
+//    $('#btn_act_buy').prop('disabled', false ); //DEBUG ONLY
     $('#btn_act_prolong').prop('disabled', !mine );
     $('#btn_act_sell').prop('disabled', !mine );
     $('#btn_act_transfer').prop('disabled', !mine );
