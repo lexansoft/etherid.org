@@ -94,7 +94,7 @@
               <button disabled id="btn_act_claim">Claim</button><br>
               <button disabled id="btn_act_buy">Buy</button><br>
               <button disabled id="btn_act_prolong">Prolong</button><br>
-              <button disabled id="btn_act_sell">Put For Sale</button><br>
+              <button disabled id="btn_act_sell">Set Selling Price</button><br>
               <button disabled id="btn_act_transfer">Transfer</button><br>
           </div>
           <div class="action_pan" id="action_claim">
@@ -113,8 +113,36 @@
               </div>
               
               <div id="buttons">
-                  <button id="btn_act_cancel">Cancel</button> 
+                  <button class="btn_act_cancel">Cancel</button> 
                   <button id="btn_act_claim_domain">Claim Domain</button><br>
+              </div>
+          </div>
+          <div class="action_pan" id="action_prolong">
+              <h1>Prolong Domain</h1>
+    
+              <div>
+                  <BR>
+                  Expires in <input size="12" id="expires" value="2000000"></input> blocks.
+                  <div class="small">Maximum value is 2000000 blocks that is approximately 1 year.</div>              
+              </div>
+              <br><br>
+              <div id="buttons">
+                  <button class="btn_act_cancel">Cancel</button> 
+                  <button id="btn_act_prolong_domain">Prolong Domain</button><br>
+              </div>
+          </div>
+          <div class="action_pan" id="action_sell">
+              <h1>Set Selling Price</h1>
+    
+              <div>
+                  <BR>
+                  Price <input size="12" id="price" value="0"></input> ETH.
+                  <div class="small">Set the price you aggree to sell the domain for. 0 price sets the domain to "No For Sale" mode.</div>              
+              </div>
+              <br><br>
+              <div id="buttons">
+                  <button class="btn_act_cancel">Cancel</button> 
+                  <button id="btn_act_sell_domain">Set Price</button><br>
               </div>
           </div>
           

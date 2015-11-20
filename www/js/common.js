@@ -80,6 +80,14 @@ $().ready( function(e){
 
     })
     
+    $(".btn_act_cancel").each( function() {
+        $(this).click( function() {
+            openActionPan( "home"); 
+        })
+    });
+    
+
+    
     $("#btn_act_claim").click( function() {
         openActionPan( "claim"); 
         
@@ -98,11 +106,7 @@ $().ready( function(e){
         if( lua ) $("#act_claim_my_address").val( lua )
         
     })
-    
-    $("#btn_act_cancel").click( function() {
-        openActionPan( "home"); 
-    })
-    
+
     $("#btn_act_claim_domain").click( function() {
         
         current_domain.expires = $("#action_claim #expires").val()
@@ -153,9 +157,127 @@ $().ready( function(e){
                     return;
                 }            
                 swal("Your claim is complete!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               }
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               
+                openActionPan( "home"); 
+            }
         )
     })
+
+    $("#btn_act_prolong").click( function() {
+        openActionPan( "prolong"); 
+    })
+    
+    $("#btn_act_prolong_domain").click( function() {
+        
+        current_domain.expires = $("#action_prolong #expires").val()
+        
+        if( current_domain.expires < 1000 ) current_domain.expires = 1000;
+        if( current_domain.expires > 2000000 ) current_domain.expires = 2000000;
+        
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to prolong domain (" + current_domain.domain + 
+                    " ). Your ownership will expire in " + current_domain.expires + " blocks."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, prolong!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = current_domain.owner;
+                    
+                    web3.setProvider( new web3.providers.HttpProvider( ) );    
+                    gp = web3.eth.gasPrice;
+                    
+                    var params = {
+                                gas: 200000,
+                                gasPrice : gp,
+                                from : wallet_to_use,
+                                to: ETHERID_CONTRACT,
+                                value: 0,
+                                data: makeData( [
+                                    "domain",
+                                    new BigNumber( current_domain.domain ),
+                                    current_domain.expires,
+                                    current_domain.price,
+                                    new BigNumber( current_domain.transfer )
+                                ] )
+                            };
+
+                    tx = web3.eth.sendTransaction( params );
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }            
+                swal("Your ownership extended!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                openActionPan( "home"); 
+            }
+
+        )
+    })
+
+    $("#btn_act_sell").click( function() {
+        openActionPan( "sell"); 
+    })
+    
+    $("#btn_act_sell_domain").click( function() {
+        
+        price_in_eth = $("#action_sell #price").val()
+        current_domain.price = new BigNumber( price_in_eth ) * ETH1;
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to set price for domain (" + current_domain.domain + 
+                    " ). This will allow anyone to pay you " + formatEther( current_domain.price, "ETH" ) + " and take the ownership for the domain."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, set price!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = current_domain.owner;
+                    
+                    web3.setProvider( new web3.providers.HttpProvider( ) );    
+                    gp = web3.eth.gasPrice;
+                    
+                    var params = {
+                                gas: 200000,
+                                gasPrice : gp,
+                                from : wallet_to_use,
+                                to: ETHERID_CONTRACT,
+                                value: 0,
+                                data: makeData( [
+                                    "domain",
+                                    new BigNumber( current_domain.domain ),
+                                    current_domain.expires,
+                                    current_domain.price,
+                                    new BigNumber( current_domain.transfer )
+                                ] )
+                            };
+
+                    tx = web3.eth.sendTransaction( params );
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }            
+                swal("Price is set!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                openActionPan( "home"); 
+            }
+
+        )
+    })
+    
 } )
 
 function no0x(a)
@@ -214,8 +336,27 @@ function  updateDomainPage( domain )
     
     $("#domain_ascii").text( ascii );
     $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
+    
     $("#domain_expires").text( domain.expires );
-    $("#domain_price").text( domain.price ? domain.price : "NOT FOR SALE" );
+    if( domain.expires> 0 ) {
+        try
+        {
+            web3.setProvider( new web3.providers.HttpProvider( ) );    
+            current_block =  web3.eth.getBlock( "latest" ).number;        
+
+            blocks_left = domain.expires - current_block
+
+            if( blocks_left <= 0 ) $("#domain_expires").text( "EXPIRED" );
+            else
+            {
+                $("#domain_expires").text( domain.expires + " (in " + blosks2time( blocks_left ) + ")");
+            }
+
+        }
+        catch(x) {}
+    }
+    
+    $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
     $("#domain_transfer").text( domain.transfer == "0x00" ? "" : domain.transfer );
 
     
@@ -365,6 +506,18 @@ function refresh_lists()
             }
         )
     }
+    
+    if( current_domain )
+    {
+        for( var i = 0; i < domains.length; i++ ) {
+            if( domains[i].domain == current_domain.domain ) {
+                updateDomainPage( domains[i] )
+                break
+            }
+        }
+        
+    }
+    
 }
 
 
@@ -493,5 +646,18 @@ function makeData( arr )
     
     //return "0x" + d;
     return d;
+}
+
+function blosks2time( n )
+{
+    secs = n * 12
+    hours = Math.Floor( secs / 60 / 60 )
+    days = Math.Floor( hours / 24 )
+    
+    if( days > 0 ) return days + " days";
+    if( hours > 0 ) return hours + " hours";
+    if( secs > 0 ) return secs + " secs";
+ 
+    return ""
 }
 

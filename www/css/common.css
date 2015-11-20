@@ -24,6 +24,11 @@ body {
     font-size: 0.8em;
 }
 
+div.small {
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
 #logo {
     text-decoration: none;
     font-size: 1.6em;
@@ -131,13 +136,6 @@ div#search_domain {
     width: 26em;
     height: 13.5em;
     overflow: hidden;
-}
-
-#action_home {
-    text-align: center;
-}
-
-#action_claim {
     text-align: center;
 }
 
