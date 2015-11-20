@@ -169,16 +169,16 @@ $().ready( function(e){
     
     $("#btn_act_prolong_domain").click( function() {
         
-        current_domain.expires = $("#action_prolong #expires").val()
+        expires = $("#action_prolong #expires").val()
         
-        if( current_domain.expires < 1000 ) current_domain.expires = 1000;
-        if( current_domain.expires > 2000000 ) current_domain.expires = 2000000;
+        if( expires < 1000 ) expires = 1000;
+        if( expires > 2000000 ) expires = 2000000;
         
         
         swal({   
             title: "Are you sure?",   
             text: "You are about to prolong domain (" + current_domain.domain + 
-                    " ). Your ownership will expire in " + current_domain.expires + " blocks."  ,   
+                    " ). Your ownership will expire in " + expires + " blocks."  ,   
             type: "warning",   
             showCancelButton: true,   
             confirmButtonText: "Yes, prolong!",
@@ -201,7 +201,7 @@ $().ready( function(e){
                                 data: makeData( [
                                     "domain",
                                     new BigNumber( current_domain.domain ),
-                                    current_domain.expires,
+                                    expires,
                                     current_domain.price,
                                     new BigNumber( current_domain.transfer )
                                 ] )
@@ -229,12 +229,12 @@ $().ready( function(e){
     $("#btn_act_sell_domain").click( function() {
         
         price_in_eth = $("#action_sell #price").val()
-        current_domain.price = new BigNumber( price_in_eth ) * ETH1;
+        price = new BigNumber( price_in_eth ) * ETH1;
         
         swal({   
             title: "Are you sure?",   
             text: "You are about to set price for domain (" + current_domain.domain + 
-                    " ). This will allow anyone to pay you " + formatEther( current_domain.price, "ETH" ) + " and take the ownership for the domain."  ,   
+                    " ). This will allow anyone to pay you " + formatEther( price, "ETH" ) + " and take the ownership for the domain."  ,   
             type: "warning",   
             showCancelButton: true,   
             confirmButtonText: "Yes, set price!",
@@ -258,7 +258,7 @@ $().ready( function(e){
                                     "domain",
                                     new BigNumber( current_domain.domain ),
                                     current_domain.expires,
-                                    current_domain.price,
+                                    price,
                                     new BigNumber( current_domain.transfer )
                                 ] )
                             };
@@ -271,6 +271,62 @@ $().ready( function(e){
                     return;
                 }            
                 swal("Price is set!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                openActionPan( "home"); 
+            }
+
+        )
+    })
+    
+    $("#btn_act_transfer").click( function() {
+        openActionPan( "transfer"); 
+    })
+    
+    $("#btn_act_transfer_domain").click( function() {
+        
+        transfer = $("#action_transfer #transfer").val()
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to set transfer address to " + transfer + 
+                    ". The owner of this address and only him or her will be able to pay " + 
+                    "the price and take the ownership of teh domain."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, set transfer address!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = current_domain.owner;
+                    
+                    web3.setProvider( new web3.providers.HttpProvider( ) );    
+                    gp = web3.eth.gasPrice;
+                    
+                    var params = {
+                                gas: 200000,
+                                gasPrice : gp,
+                                from : wallet_to_use,
+                                to: ETHERID_CONTRACT,
+                                value: 0,
+                                data: makeData( [
+                                    "domain",
+                                    new BigNumber( current_domain.domain ),
+                                    current_domain.expires,
+                                    current_domain.price,
+                                    new BigNumber( transfer )
+                                ] )
+                            };
+
+                    tx = web3.eth.sendTransaction( params );
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }            
+                swal("Transfer is done!", 
                      "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
                 openActionPan( "home"); 
             }

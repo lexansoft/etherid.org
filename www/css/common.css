@@ -143,6 +143,10 @@ div#search_domain {
     font-size: 0.8em;
 }
 
+input#transfer {
+    font-size: 0.8em;
+}
+
 #action_home button{
     width: 12em;
 }
