@@ -45,13 +45,20 @@ $().ready( function(e){
             a = hexToArray( s )
             hex = arrayToHex( a )    
             hex = "0x" + hex.substr( 0, 64 )
-            ascii = utf8.decode( toAscii( hex ) ) 
+            ascii = ""
+            try {
+                ascii = utf8.decode( toAscii( hex ) ) 
+            }
+            catch( x ) {}
         }
         else
         {
             utf = utf8.encode( s ).slice(0, 32);
             hex = "0x" + asciiToHex( utf )    
-            ascii = utf8.decode( utf ) 
+            try {
+                ascii = utf8.decode( toAscii( hex ) ) 
+            }
+            catch( x ) {}
         }
         
         
@@ -197,7 +204,15 @@ function  openActionPan( pan )
 function  updateDomainPage( domain )
 {
     $("#domain_hex").text( domain.domain );
-    $("#domain_ascii").text( ascii = utf8.decode( toAscii( domain.domain ) ) );
+    
+    ascii = ""
+    try {
+        ascii = utf8.decode( toAscii( domain.domain ) ) 
+    }
+    catch( x ) {}
+
+    
+    $("#domain_ascii").text( ascii );
     $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
     $("#domain_expires").text( domain.expires );
     $("#domain_price").text( domain.price ? domain.price : "NOT FOR SALE" );
