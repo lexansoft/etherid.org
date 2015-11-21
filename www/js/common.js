@@ -1,4 +1,4 @@
-ETHERID_CONTRACT = "0xe54940974aee76fadda804b5a50cca3ec5494455"
+ETHERID_CONTRACT = "0x84f6152992debf532917013053b68f3f323c6d04"
 
 domains = new Array()
 ids = new Array()
@@ -432,6 +432,19 @@ $().ready( function(e){
                 return false   
             }      
             
+            current_id = ""
+            if( inputValue.substring( 0, 2 ) === "0x" ) 
+            {    
+                a = hexToArray( inputValue )
+                current_id = arrayToHex( a )    
+                current_id = "0x" + current_id.substr( 0, 64 )
+            }
+            else
+            {
+                utf = utf8.encode( inputValue ).slice(0, 32);
+                current_id = "0x" + asciiToHex( utf )    
+            }
+            
             swal(
             {   
                 title: "ID Value",   
@@ -451,8 +464,62 @@ $().ready( function(e){
                     return false   
                 }      
 
+                current_value = ""
+                if( inputValue.substring( 0, 2 ) === "0x" ) 
+                {    
+                    a = hexToArray( inputValue )
+                    current_value = arrayToHex( a )    
+                    current_value = "0x" + current_value.substr( 0, 64 )
+                }
+                else
+                {
+                    utf = utf8.encode( inputValue ).slice(0, 32);
+                    current_value = "0x" + asciiToHex( utf )    
+                }
 
-                swal("Nice!", "You wrote: " + inputValue, "success"); 
+                swal({   
+                    title: "Are you sure?",   
+                    text: "You are about to add new ID " + current_id + 
+                            " = "  + current_value ,   
+                    type: "warning",   
+                    showCancelButton: true,   
+                    confirmButtonText: "Yes, add ID!",
+                    closeOnConfirm: false,    
+                    },
+                    function(isConfirm){   
+                        try 
+                        {
+                            wallet_to_use = current_domain.owner;
+
+                            web3.setProvider( new web3.providers.HttpProvider( ) );    
+                            gp = web3.eth.gasPrice;
+
+                            var params = {
+                                        gas: 200000,
+                                        gasPrice : gp,
+                                        from : wallet_to_use,
+                                        to: ETHERID_CONTRACT,
+                                        value: 0,
+                                        data: makeData( [
+                                            "id",
+                                            new BigNumber( current_domain.domain ),
+                                            new BigNumber( current_id ),
+                                            new BigNumber( current_value )
+                                        ] )
+                                    };
+
+                            tx = web3.eth.sendTransaction( params );
+                        }
+                        catch( err )
+                        {
+                            swal( "Error", err, "error" )                
+                            return;
+                        }  
+                        swal("ID created!", 
+                             "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                        openActionPan( "home"); 
+                    }
+                )                
             });        
         });        
         
@@ -595,6 +662,27 @@ function  updateDomainPage( domain )
     
     $('#domain_status').text( status )
     
+    $("#ids").find("tr:gt(0)").remove();
+    
+    for( var i = 0; i < ids.length; i++ )
+    {
+        if( ids[i].domain == current_domain.domain )
+        {
+            
+            $("#ids").append
+            (
+                $("tr")
+                .append( $("td").text( "haha ") )
+                .append( $("td").text( "haha ") )
+                .append( $("td").text( "haha ") )
+                .append( $("td").text( "haha ") )
+                .append( $("td").text( "haha ") )
+            )
+        }
+
+    }
+    
+    
     current_domain = domain
     
 }
@@ -680,11 +768,11 @@ function refresh_lists()
     ids = new Array()    
     for( var i = 0; i < n_ids; i++ )
     {
-        domains.push( 
+        ids.push( 
             { 
                 'domain': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 5) ),
-                'id' : new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 6 ) ),
-                'value': new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 7 ) )
+                'id' : remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 6 ) ),
+                'value': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 7 ) )
             }
         )
     }

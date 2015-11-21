@@ -65,7 +65,7 @@
         [ ptr ] table_offset 
         (for [i] : 0  (&& (< @i @@n_domains) (= @found 0 ) )  [i] (+ @i 1) 
         {
-            (when (= txDomain @@ @ptr) { ; the domain found
+            (if (= txDomain @@ @ptr) { ; the domain found
 
                 [ found ] 1
 
@@ -110,9 +110,10 @@
                     })
                     [[ (+ @ptr T_EXPIRES) ]] (+ ( NUMBER ) @n )     ; set expiration to current block + n
                 })
+            }
+            { ; if not the needed domain
+                [ ptr ] (+ @ptr 8 )
             })
-
-            [ ptr ] (+ @ptr 8 )
         })        
         
         (when (= @found 0) ; not found in the table
@@ -132,101 +133,101 @@
                 [[ n_domains ]] (+ @@n_domains 1 )
             })
         })
-
     })
 
-    ( when (= txCommand "id")  
-    {     
-        (def "txIdDomain"     (calldataload 0x20) )
-        (def "txIdId"         (calldataload 0x40) )
-        (def "txIdValue"      (calldataload 0x60) ) ; 0 value deltes the id
-
-        ; first find the domain
-        [ found ] 0
-        [ can_change ] 0
-        [ ptr ] table_offset 
-        (for [i] : 0  (&& (< @i @@n_domains) (= @found 0 ) )  [i] (+ @i 1) 
-        {
-            (when (= txIdDomain @@ @ptr) { ; the domain found
-
-                [ found ] 1
-
-                (when 
-                    (|| 
-                        (= @@ (+ @ptr T_OWNER ) ( caller ) )        ; is mine
-                        (< ( NUMBER )  @@ (+ @ptr T_EXPIRES ) )      ; not yet expired
-                    )
-                {
-                     [ can_change ] 1
-                })
-            })
-
-            [ ptr ] (+ @ptr 8 )
-        })        
-        
-        (when (= @can_change 1) 
-        {
-            [ found ] 0
-            [ unused_record ] 0
-
-            (for [i] : 0  (&& (< @i @@n_ids) (= @found 0 ) )  [i] (+ @i 1) 
-            {
-                (when (&& (= @unused_record 0 ) (= @@ (+ @ptr T_ID_DOMAIN) 0 ) ) 
-                {
-                    [ unused_record ] @ptr ; remember for reuse
-                })
-
-                (when 
-                    (&&
-                        (= txIdDomain @@ (+ @ptr T_ID_DOMAIN) ) 
-                        (= txIdId @@ (+ @ptr T_ID_ID) ) 
-                    )
-                {
-                    [ found ] 1
-
-                    (when (= txIdValue 0 ) ; remove the id
-                    {
-                        [[ (+ @ptr T_ID_DOMAIN) ]] 0
-                        [[ (+ @ptr T_ID_ID) ]]  0
-                    })
-
-                    [[ (+ @ptr T_VALUE) ]] txIdValue
-                })
-
-                
-
-            })
-
-            (when (= @found 0 ) {
-                
-                (when (!= @unused_record 0 )
-                {
-                    [ ptr ] @unused_record 
-                })
-                
-                
-                (when (&& (!= txIdId 0 ) (!= txIdValue 0 ) ) 
-                { 
-                    [[ (+ @ptr T_ID_DOMAIN ) ]]  txIdDomain
-                    [[ (+ @ptr T_ID_ID ) ]]      txIdId
-                    [[ (+ @ptr T_ID_VALUE ) ]]   txIdValue
-
-                    [[ n_ids ]] (+ @@n_ids 1 )
-                })
-            })
-
-        })
-
-    })
+;    ( when (= txCommand "id")  
+;    {     
+;        (def "txIdDomain"     (calldataload 0x20) )
+;        (def "txIdId"         (calldataload 0x40) )
+;        (def "txIdValue"      (calldataload 0x60) ) ; 0 value deltes the id
+;
+;        ; first find the domain
+;        [ found ] 0
+;        [ can_change ] 0
+;        [ ptr ] table_offset 
+;        (for [i] : 0  (&& (< @i @@n_domains) (= @found 0 ) )  [i] (+ @i 1) 
+;        {
+;            (when (= txIdDomain @@ @ptr) { ; the domain found
+;
+;                [ found ] 1
+;
+;                (when 
+;                    (|| 
+;                        (= @@ (+ @ptr T_OWNER ) ( caller ) )        ; is mine
+;                        (< ( NUMBER )  @@ (+ @ptr T_EXPIRES ) )      ; not yet expired
+;                    )
+;                {
+;                     [ can_change ] 1
+;                })
+;            })
+;
+;            [ ptr ] (+ @ptr 8 )
+;        })        
+;        
+;        (when (= @can_change 1) 
+;        {
+;            [ found ] 0
+;            [ unused_record ] 0
+;            [ ptr ] table_offset 
+;
+;            (for [i] : 0  (&& (< @i @@n_ids) (= @found 0 ) )  [i] (+ @i 1) 
+;            {
+;                (when (&& (= @unused_record 0 ) (= @@ (+ @ptr T_ID_DOMAIN) 0 ) ) 
+;                {
+;                    [ unused_record ] @ptr ; remember for reuse
+;                })
+;
+;                (if 
+;                    (&&
+;                        (= txIdDomain @@ (+ @ptr T_ID_DOMAIN) ) 
+;                        (= txIdId @@ (+ @ptr T_ID_ID) ) 
+;                    )
+;                {
+;                    [ found ] 1
+;
+;                    (when (= txIdValue 0 ) ; remove the id
+;                    {
+;                        [[ (+ @ptr T_ID_DOMAIN) ]] 0
+;                        [[ (+ @ptr T_ID_ID) ]]  0
+;                    })
+;
+;                    [[ (+ @ptr T_ID_VALUE) ]] txIdValue
+;                }
+;                { ; if not the needed ID
+;                    [ ptr ] (+ @ptr 8 )
+;                })
+;            })
+;
+;            (when (= @found 0 ) {
+;                
+;                (when (!= @unused_record 0 )
+;                {
+;                    [ ptr ] @unused_record 
+;                })
+;                
+;                
+;                (when (&& (!= txIdId 0 ) (!= txIdValue 0 ) ) 
+;                { 
+;                    [[ (+ @ptr T_ID_DOMAIN ) ]]  txIdDomain
+;                    [[ (+ @ptr T_ID_ID ) ]]      txIdId
+;                    [[ (+ @ptr T_ID_VALUE ) ]]   txIdValue
+;
+;                    [[ n_ids ]] (+ @@n_ids 1 )
+;                })
+;            })
+;
+;        })
+;
+;    })
 
     ;!!!!! 
     ; Ability to kill the contract is here only for debugging.
     ; The actual contract will not have it, so even the owner of the contract 
     ; will not be able to remove the contract from the Ethereum blockchin
 
-    ( when (&& @is_admin (= txCommand "kill") ) {
-            (suicide @@owner)
-    })
+;    ( when (&& @is_admin (= txCommand "kill") ) {
+;            (suicide @@owner)
+;    })
 
     ( when (> ( callvalue ) @tx_value_used ) { ; return the left over money
         (send 0x303 ( caller ) (- ( callvalue ) @tx_value_used ) )
