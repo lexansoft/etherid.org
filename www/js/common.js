@@ -1,33 +1,38 @@
-ETHERID_CONTRACT = "0x84f6152992debf532917013053b68f3f323c6d04"
+ETHERID_CONTRACT = "0x7aa97a7aa4c3a1f07ac3ca76be286e70dc804162"
+ETHERID_ABI = 
+[{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
+;
 
 domains = new Array()
 ids = new Array()
-current_domain = {}
+current_domain = 0
 
 web3 = require('web3');
 
 ETH1 = new BigNumber( 1000000000000000000 );    
 ETH_SIGN = "\u{1D763}"
 
-
 $().ready( function(e){ 
+
+    web3.setProvider( new web3.providers.HttpProvider( ) );    
+    
+    try
+    {
+        contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+        $("#stat_domains").text( contract.n_domains() );
+    }
+    catch( x ) { }
+    
+    
+    
     $( "#tabs" ).tabs(
         {
             beforeActivate: function( event, ui ) 
             {
-                if( ui.newPanel[0].id != "tabs-info" ) 
-                {
-                    if( domains.length == 0 ) refresh_lists();
-                }
             }    
 
         }
     );    
-    
-    
-    $("#btn_refresh").click( function() {
-        refresh_lists();
-    })
     
     
     $("input#search_domain").keyup(function( event ) {
@@ -63,16 +68,9 @@ $().ready( function(e){
         
         
         hex = remove0Prefix( hex )
-        domain = { "domain": hex }
+        current_domain = new BigNumber( hex );
 
-        for( var i = 0; i < domains.length; i++ ) {
-            if( domains[i].domain == hex ) {
-               domain = domains[i]
-               break
-            }
-        }
-        
-        updateDomainPage( domain )
+        updateDomainPage()
         
         
         $("#domain_hex").text( hex );
@@ -109,7 +107,7 @@ $().ready( function(e){
 
     $("#btn_act_claim_domain").click( function() {
         
-        expires = $("#action_claim #expires").val()
+        expires = new BigNumber( $("#action_claim #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -131,7 +129,6 @@ $().ready( function(e){
                     
                     Cookies.set('etherid_last_used_address', wallet_to_use ); 
                     
-                    web3.setProvider( new web3.providers.HttpProvider( ) );    
                     gp = web3.eth.gasPrice;
                     
                     var params = {
@@ -184,7 +181,7 @@ $().ready( function(e){
 
     $("#btn_act_buy_domain").click( function() {
         
-        expires = $("#action_buy #expires").val()
+        expires = new BigNumber( $("#action_buy #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -206,7 +203,6 @@ $().ready( function(e){
                     
                     Cookies.set('etherid_last_used_address', wallet_to_use ); 
                     
-                    web3.setProvider( new web3.providers.HttpProvider( ) );    
                     gp = web3.eth.gasPrice;
                     
                     var params = {
@@ -245,7 +241,7 @@ $().ready( function(e){
     
     $("#btn_act_prolong_domain").click( function() {
         
-        expires = $("#action_prolong #expires").val()
+        expires = new BigNumber( $("#action_prolong #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -265,7 +261,6 @@ $().ready( function(e){
                 {
                     wallet_to_use = current_domain.owner;
                     
-                    web3.setProvider( new web3.providers.HttpProvider( ) );    
                     gp = web3.eth.gasPrice;
                     
                     var params = {
@@ -321,7 +316,6 @@ $().ready( function(e){
                 {
                     wallet_to_use = current_domain.owner;
                     
-                    web3.setProvider( new web3.providers.HttpProvider( ) );    
                     gp = web3.eth.gasPrice;
                     
                     var params = {
@@ -377,7 +371,6 @@ $().ready( function(e){
                 {
                     wallet_to_use = current_domain.owner;
                     
-                    web3.setProvider( new web3.providers.HttpProvider( ) );    
                     gp = web3.eth.gasPrice;
                     
                     var params = {
@@ -491,7 +484,6 @@ $().ready( function(e){
                         {
                             wallet_to_use = current_domain.owner;
 
-                            web3.setProvider( new web3.providers.HttpProvider( ) );    
                             gp = web3.eth.gasPrice;
 
                             var params = {
@@ -571,25 +563,37 @@ function  openActionPan( pan )
 }
 
 
-function  updateDomainPage( domain )
+function  updateDomainPage()
 {
-    $("#domain_hex").text( domain.domain );
+    hex = web3.toHex( current_domain );
+    
+    $("#domain_hex").text( hex );
     
     ascii = ""
     try {
-        ascii = utf8.decode( toAscii( domain.domain ) ) 
+        ascii = utf8.decode( toAscii( hex ) ) 
     }
     catch( x ) {}
 
     
     $("#domain_ascii").text( ascii );
-    $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
     
-    $("#domain_expires").text( domain.expires );
-    if( domain.expires> 0 ) {
-        try
-        {
-            web3.setProvider( new web3.providers.HttpProvider( ) );    
+
+    $("#domain_owner").text( "" );
+    $("#domain_expires").text( "" );
+
+    domain = {}
+    
+    try
+    {
+        contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+        domain = contract.getDomain( current_domain );
+        
+        $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
+
+        $("#domain_expires").text( domain.expires );
+        var current_block = 0;
+        if( domain.expires > 0 ) {
             current_block =  web3.eth.getBlock( "latest" ).number;        
 
             blocks_left = domain.expires - current_block
@@ -599,68 +603,60 @@ function  updateDomainPage( domain )
             {
                 $("#domain_expires").text( domain.expires + " (in " + blosks2time( blocks_left ) + ")");
             }
-
         }
-        catch(x) {}
-    }
-    
-    $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
-    $("#domain_transfer").text( domain.transfer == "0x00" ? "" : domain.transfer );
 
-    
-    var my_accounts = []
-    var current_block = 0;
-    
-    try 
-    {
-        web3.setProvider( new web3.providers.HttpProvider( ) );    
-        current_block =  web3.eth.getBlock( "latest" ).number;
+        $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
+        $("#domain_transfer").text( domain.transfer == "0x00" ? "" : domain.transfer );
+
+        var my_accounts = []
         my_accounts = web3.eth.accounts;
+    
+        // Deturmine the status
+
+        var available = domain.owner == undefined || domain.owner == ""
+        var on_sale = domain.price == undefined || domain.price == 0
+        var expired = domain.expires < current_block
+        var mine = false;
+        if( !available ) {
+            for( var i = 0; i < my_accounts.length; i++ )
+            {
+                if( areHexEq( my_accounts[i], domain.owner ) ) { mine = true; break; }
+            }
+        }
+
+        var on_sale = domain.price > 0
+        var forme = false;
+        for( var i = 0; i < my_accounts.length; i++ )
+        {
+            if( areHexEq( my_accounts[i], domain.transfer ) ) { mine = true; break; }
+        }
+
+        $('#btn_act_claim').prop('disabled', !( expired || available ) );
+        $('#btn_act_buy').prop('disabled', !( !mine && ( on_sale || forme ) ) );
+    //    $('#btn_act_buy').prop('disabled', false ); //DEBUG ONLY
+        $('#btn_act_prolong').prop('disabled', !mine );
+        $('#btn_act_sell').prop('disabled', !mine );
+        $('#btn_act_transfer').prop('disabled', !mine );
+        $('#btn_act_new_id').prop('disabled', !mine );
+
+
+        status = "Unknown"
+
+        if( on_sale ) status = "On Sale"
+        if( available ) status = "Available"
+        if( expired ) status = "Expired"
+        if( mine ) status = "My Domain"
+
+
+        $('#domain_status').text( status )
+    
     }
-    catch( e )
+    catch( x )
     {
-        swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client.", "error")
+            swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error")
         return;
     }
     
-    // Deturmine the status
-    
-    var available = domain.owner == undefined || domain.owner == ""
-    var on_sale = domain.price == undefined || domain.price == 0
-    var expired = domain.expires < current_block
-    var mine = false;
-    if( !available ) {
-        for( var i = 0; i < my_accounts.length; i++ )
-        {
-            if( areHexEq( my_accounts[i], domain.owner ) ) { mine = true; break; }
-        }
-    }
-    
-    var on_sale = domain.price > 0
-    var forme = false;
-    for( var i = 0; i < my_accounts.length; i++ )
-    {
-        if( areHexEq( my_accounts[i], domain.transfer ) ) { mine = true; break; }
-    }
-    
-    $('#btn_act_claim').prop('disabled', !( expired || available ) );
-    $('#btn_act_buy').prop('disabled', !( !mine && ( on_sale || forme ) ) );
-//    $('#btn_act_buy').prop('disabled', false ); //DEBUG ONLY
-    $('#btn_act_prolong').prop('disabled', !mine );
-    $('#btn_act_sell').prop('disabled', !mine );
-    $('#btn_act_transfer').prop('disabled', !mine );
-    $('#btn_act_new_id').prop('disabled', !mine );
-    
-    
-    status = "Unknown"
-    
-    if( on_sale ) status = "On Sale"
-    if( available ) status = "Available"
-    if( expired ) status = "Expired"
-    if( mine ) status = "My Domain"
-    
-    
-    $('#domain_status').text( status )
     
     $("#ids").find("tr:gt(0)").remove();
     
@@ -681,10 +677,6 @@ function  updateDomainPage( domain )
         }
 
     }
-    
-    
-    current_domain = domain
-    
 }
 
 function areHexEq( a, b )
@@ -719,77 +711,6 @@ function toAscii(hex) { //fixed version
 
     return str;
 };
-
-function refresh_lists()
-{
-    $( "#stat" ).css('visibility', 'visible');
-    
-    
-    try{
-        web3.setProvider( new web3.providers.HttpProvider( ) );    
-        gp = web3.eth.gasPrice;
-    }
-    catch( x ) 
-    {
-        swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client.", "error")
-        return;
-    }
-    
-    var sign = toAscii( web3.eth.getStorageAt( ETHERID_CONTRACT, 0 ) );
-        
-    if( sign != "EtherId" )
-    {
-        swal("Web3 Error!", "Wrong EtherId contract signature. Please be sure you are connected to the actual Ethereum network.", "error")
-        return;
-    }    
-    
-    n_domains = web3.toDecimal ( web3.eth.getStorageAt( ETHERID_CONTRACT,  2 ) );
-    $( "#stat_domains" ).text( n_domains );
-    
-    n_ids = web3.toDecimal ( web3.eth.getStorageAt( ETHERID_CONTRACT,  3 ) );
-    $( "#stat_ids" ).text( n_ids );
-    
-    table_offset = 0x100;
-    
-    domains = new Array()    
-    for( var i = 0; i < n_domains; i++ )
-    {
-        domains.push( 
-            { 
-                'domain': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i ) ),
-                'owner' : remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 1 ) ),
-                'expires': web3.toDecimal( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 2 ) ),
-                'price': new BigNumber( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 3 ) ),
-                'transfer': remove0Prefix(web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 4 ) )
-            }
-        )
-    }
-    
-    ids = new Array()    
-    for( var i = 0; i < n_ids; i++ )
-    {
-        ids.push( 
-            { 
-                'domain': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 5) ),
-                'id' : remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 6 ) ),
-                'value': remove0Prefix( web3.eth.getStorageAt( ETHERID_CONTRACT,  table_offset + 8 * i + 7 ) )
-            }
-        )
-    }
-    
-    if( current_domain )
-    {
-        for( var i = 0; i < domains.length; i++ ) {
-            if( domains[i].domain == current_domain.domain ) {
-                updateDomainPage( domains[i] )
-                break
-            }
-        }
-        
-    }
-    
-}
-
 
 function arrayToHex( arr ) {
     var str ='';

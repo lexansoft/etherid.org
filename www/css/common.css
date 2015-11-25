@@ -46,8 +46,6 @@ div.small {
 
 #stat {
     float: right;
-    visibility: hidden;
-/*    display: none;*/
     clear: both;
     padding: 0.2em;
     padding-right: 1em;
