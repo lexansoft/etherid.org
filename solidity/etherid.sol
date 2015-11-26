@@ -150,6 +150,7 @@ function changeId( uint domain, uint name, uint value ) {
             if( value != 0 )
             {
                 id.value = value;
+                DomainChanged( msg.sender, domain, name );
             }
             else //delete the id
             {

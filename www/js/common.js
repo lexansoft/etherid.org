@@ -531,7 +531,6 @@ $().ready( function(e){
                         }  
                         swal("ID created!", 
                              "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
-                        openActionPan( "home"); 
                     }
                 )                
             });        
@@ -713,16 +712,20 @@ function  updateDomainPage()
             }
             catch( x ) {}            
             
-            
-            
-            
             $('table#ids > tbody').append(
                 $("<tr>")
                     .append( $("<td>").text( id_ascii ) )
                     .append( $("<td>").text( id_hex ) )
                     .append( $("<td>").text( val_ascii ) )
                     .append( $("<td>").text( val_hex ) )
-                    .append( $("<td>").text( "actions" ) )
+                    .append
+                    ( 
+                        $("<td>")
+                        .append( $("<button>").attr( "id", id_hex).text( "Edit" )
+                                .attr( "onclick", "editId()"))
+                        .append( $("<button>").attr( "id", id_hex).text( "Delete" )
+                                .attr( "onclick", "deleteId()"))
+                    )
             );         
             
             id = id_res[1];
@@ -733,6 +736,124 @@ function  updateDomainPage()
             swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error")
         return;
     }
+}
+
+function editId( ) {
+    current_id =  event.srcElement.id
+    
+    swal(
+    {   
+        title: "ID Value",   
+        text: "Please specify new value. You can use 0xNNN notation to enter a hexadecimal value.",   
+        type: "input",   
+        showCancelButton: true,   
+        closeOnConfirm: false,   
+        animation: "slide-from-top",   
+        inputPlaceholder: "0" 
+    }, 
+    function(inputValue)
+    {   
+        if (inputValue === false) return false;      
+        if (inputValue === "") 
+        {     
+            swal.showInputError("You need to specify value!");     
+            return false   
+        }      
+
+        current_value = ""
+        if( inputValue.substring( 0, 2 ) === "0x" ) 
+        {    
+            a = hexToArray( inputValue )
+            current_value = arrayToHex( a )    
+            current_value = "0x" + current_value.substr( 0, 64 )
+        }
+        else
+        {
+            utf = utf8.encode( inputValue ).slice(0, 32);
+            current_value = "0x" + asciiToHex( utf )    
+        }
+
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to change value for ID " + current_id + 
+                    " = "  + current_value ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, change ID!",
+            closeOnConfirm: false,    
+            },
+            function(isConfirm){   
+                try 
+                {
+                    wallet_to_use = domain.owner;
+
+                    var params = {
+                                gas: 200000,
+                                from : wallet_to_use,
+                                value: 0
+                            };
+
+                    getContract().changeId.sendTransaction
+                    (
+                        current_domain, 
+                        current_id, 
+                        current_value, 
+                        params 
+                    );                             
+                }
+                catch( err )
+                {
+                    swal( "Error", err, "error" )                
+                    return;
+                }  
+                swal("ID changed!", 
+                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+            }
+        )                
+    });        
+}
+
+function deleteId( ) {
+    current_id =  event.srcElement.id
+
+    swal({   
+    title: "Are you sure?",   
+    text: "You are about to delete ID " + current_id,   
+    type: "warning",   
+    showCancelButton: true,   
+    confirmButtonText: "Yes, delete ID!",
+    closeOnConfirm: false,    
+    },
+    function(isConfirm){   
+        try 
+        {
+            wallet_to_use = domain.owner;
+
+            var params = {
+                        gas: 200000,
+                        from : wallet_to_use,
+                        value: 0
+                    };
+
+            getContract().changeId.sendTransaction
+            (
+                current_domain, 
+                current_id, 
+                0, 
+                params 
+            );                             
+        }
+        catch( err )
+        {
+            swal( "Error", err, "error" )                
+            return;
+        }  
+        swal("ID deleted!", 
+             "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+    }
+)                
+
+
 }
 
 function areHexEq( a, b )

@@ -204,3 +204,10 @@ table#ids thead {
 {
     padding-top: 0.5em;
 }
+
+#ids button
+{
+    padding: 0.3em;
+    margin: 0.1em;
+    font-size: 0.8em;
+}
