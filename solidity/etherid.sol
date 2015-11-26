@@ -30,10 +30,11 @@ function EtherId()
 
 event DomainChanged( address indexed sender, uint domain, uint id );
 
-function getId( uint domain, uint id ) constant returns (uint v, uint next_id )
+function getId( uint domain, uint id ) constant returns (uint v, uint next_id, uint prev_id )
 {
   v = domains[domain].ids[id].value;
   next_id = domains[domain].ids[id].next_id;
+  prev_id = domains[domain].ids[id].prev_id;
 }
 
 function getDomain( uint domain ) constant returns 

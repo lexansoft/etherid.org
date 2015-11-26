@@ -154,10 +154,10 @@
               <h1>Set Selling Price</h1>
     
               <div>
-                  <BR>
                   Price <input size="12" id="price" value="0"></input> ETH.
-                  <div class="small">Set the price you aggree to sell the domain for. 0 price sets the domain to "No For Sale" mode.</div>              
-              </div>
+                  <div class="small">Set the price you aggree to sell the domain for. 0 price sets the domain to "No For Sale" mode.</div>           
+                  Expires in <input size="12" id="expires" value="2000000"></input> blocks.
+                  <div class="small">Maximum value is 2000000 blocks that is approximately 1 year.</div>                       </div>
               <br><br>
               <div id="buttons">
                   <button class="btn_act_cancel">Cancel</button> 
@@ -168,11 +168,10 @@
               <h1>Transfer Domain</h1>
     
               <div>
-                  <BR>
                   New owner address:<br> <input size="50" id="transfer" value="0"></input>
                   <div class="small">Owner of this address and only him/her can pay the price and take the domain. 0 - disables transfer.</div>              
-              </div>
-              <br><br>
+                  Expires in <input size="12" id="expires" value="2000000"></input> blocks.
+                  <div class="small">Maximum value is 2000000 blocks that is approximately 1 year.</div>                       </div>
               <div id="buttons">
                   <button class="btn_act_cancel">Cancel</button> 
                   <button id="btn_act_transfer_domain">Transfer</button><br>
@@ -198,13 +197,16 @@
         <div class="right"><button disabled id="btn_act_new_id">Add New ID</button></div>
 
          <table id="ids">
-             <tr>
-                 <td>ID</td>
-                 <td>ID(HEX)</td>
-                 <td>Value</td>
-                 <td>Value(Hex)</td>
-                 <td>Action</td>
-             </tr>
+             <thead>
+                 <tr>
+                     <td>ID</td>
+                     <td>ID(HEX)</td>
+                     <td>Value</td>
+                     <td>Value(Hex)</td>
+                     <td>Action</td>
+                 </tr>
+             </thead>
+             <tbody></tbody>
                 
          </table>
 

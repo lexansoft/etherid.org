@@ -6,19 +6,31 @@ ETHERID_ABI =
 domains = new Array()
 ids = new Array()
 current_domain = 0
+domain = {}
+ether_contract = undefined;
 
 web3 = require('web3');
 
 ETH1 = new BigNumber( 1000000000000000000 );    
 ETH_SIGN = "\u{1D763}"
 
-$().ready( function(e){ 
+function getContract(){
+    if( ether_contract ) return ether_contract;
+    ether_contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+    ether_contract.DomainChanged().watch( function( error, result ) {
+        $("#stat_domains").text( contract.n_domains() );
+        updateDomainPage()
+    });
+    return ether_contract;
+}
 
-    web3.setProvider( new web3.providers.HttpProvider( ) );    
+$().ready( function(e){ 
     
+
     try
     {
-        contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+        web3.setProvider( new web3.providers.HttpProvider( ) );    
+        contract = getContract();        
         $("#stat_domains").text( contract.n_domains() );
 //        root_domain = web3.toHex( contract.root_domain() );
 //        alert( root_domain )
@@ -140,21 +152,12 @@ $().ready( function(e){
                     
                     gp = web3.eth.gasPrice;
                     
-                    contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+                    contract = getContract();
                     
                     var params = {
                                 gas: 200000,
-//                                gasPrice : gp,
                                 from : wallet_to_use,
-//                                to: ETHERID_CONTRACT,
-                                value: 0,
-//                                data: makeData( [
-//                                    "domain",
-//                                    new BigNumber( current_domain.domain ),
-//                                    expires,
-//                                    0,
-//                                    0 
-//                                ] )
+                                value: 0
                             };
 
                     //tx = web3.eth.sendTransaction( params );
@@ -272,26 +275,25 @@ $().ready( function(e){
             function(isConfirm){   
                 try 
                 {
-                    wallet_to_use = current_domain.owner;
-                    
-                    gp = web3.eth.gasPrice;
+                    wallet_to_use = domain.owner;
                     
                     var params = {
                                 gas: 200000,
-                                gasPrice : gp,
                                 from : wallet_to_use,
-                                to: ETHERID_CONTRACT,
-                                value: 0,
-                                data: makeData( [
-                                    "domain",
-                                    new BigNumber( current_domain.domain ),
-                                    expires,
-                                    current_domain.price,
-                                    new BigNumber( current_domain.transfer )
-                                ] )
+                                value: 0
                             };
 
-                    tx = web3.eth.sendTransaction( params );
+                    //tx = web3.eth.sendTransaction( params );
+                    
+                    getContract().changeDomain.sendTransaction
+                    (
+                        current_domain, 
+                        expires, 
+                        domain.price, 
+                        domain.transfer, 
+                        params 
+                    );
+                    
                 }
                 catch( err )
                 {
@@ -315,6 +317,12 @@ $().ready( function(e){
         price_in_eth = $("#action_sell #price").val()
         price = new BigNumber( price_in_eth ) * ETH1;
         
+        expires = new BigNumber( $("#action_sell #expires").val() )
+        
+        if( expires < 1000 ) expires = 1000;
+        if( expires > 2000000 ) expires = 2000000;
+        
+        
         swal({   
             title: "Are you sure?",   
             text: "You are about to set price for domain (" + current_domain.domain + 
@@ -327,26 +335,26 @@ $().ready( function(e){
             function(isConfirm){   
                 try 
                 {
-                    wallet_to_use = current_domain.owner;
-                    
-                    gp = web3.eth.gasPrice;
+                    wallet_to_use = domain.owner;
                     
                     var params = {
                                 gas: 200000,
-                                gasPrice : gp,
                                 from : wallet_to_use,
-                                to: ETHERID_CONTRACT,
-                                value: 0,
-                                data: makeData( [
-                                    "domain",
-                                    new BigNumber( current_domain.domain ),
-                                    current_domain.expires,
-                                    price,
-                                    new BigNumber( current_domain.transfer )
-                                ] )
+                                value: 0
                             };
 
-                    tx = web3.eth.sendTransaction( params );
+                    //tx = web3.eth.sendTransaction( params );
+                    
+                    getContract().changeDomain.sendTransaction
+                    (
+                        current_domain, 
+                        expires, 
+                        price, 
+                        domain.transfer, 
+                        params 
+                    );                    
+                    
+                    
                 }
                 catch( err )
                 {
@@ -368,6 +376,15 @@ $().ready( function(e){
     $("#btn_act_transfer_domain").click( function() {
         
         transfer = $("#action_transfer #transfer").val()
+        if( transfer.substring( 0, 2 ) != "0x" ) 
+        {    
+            transfer = "0x" + transfer;
+        }
+        
+        expires = new BigNumber( $("#action_transfer #expires").val() )
+        
+        if( expires < 1000 ) expires = 1000;
+        if( expires > 2000000 ) expires = 2000000;        
         
         swal({   
             title: "Are you sure?",   
@@ -382,26 +399,22 @@ $().ready( function(e){
             function(isConfirm){   
                 try 
                 {
-                    wallet_to_use = current_domain.owner;
-                    
-                    gp = web3.eth.gasPrice;
+                    wallet_to_use = domain.owner;
                     
                     var params = {
                                 gas: 200000,
-                                gasPrice : gp,
                                 from : wallet_to_use,
-                                to: ETHERID_CONTRACT,
-                                value: 0,
-                                data: makeData( [
-                                    "domain",
-                                    new BigNumber( current_domain.domain ),
-                                    current_domain.expires,
-                                    current_domain.price,
-                                    new BigNumber( transfer )
-                                ] )
+                                value: 0
                             };
 
-                    tx = web3.eth.sendTransaction( params );
+                    getContract().changeDomain.sendTransaction
+                    (
+                        current_domain, 
+                        expires, 
+                        domain.price, 
+                        transfer, 
+                        params 
+                    );                                  
                 }
                 catch( err )
                 {
@@ -495,25 +508,21 @@ $().ready( function(e){
                     function(isConfirm){   
                         try 
                         {
-                            wallet_to_use = current_domain.owner;
-
-                            gp = web3.eth.gasPrice;
+                            wallet_to_use = domain.owner;
 
                             var params = {
                                         gas: 200000,
-                                        gasPrice : gp,
                                         from : wallet_to_use,
-                                        to: ETHERID_CONTRACT,
-                                        value: 0,
-                                        data: makeData( [
-                                            "id",
-                                            new BigNumber( current_domain.domain ),
-                                            new BigNumber( current_id ),
-                                            new BigNumber( current_value )
-                                        ] )
+                                        value: 0
                                     };
 
-                            tx = web3.eth.sendTransaction( params );
+                            getContract().changeId.sendTransaction
+                            (
+                                current_domain, 
+                                current_id, 
+                                current_value, 
+                                params 
+                            );                             
                         }
                         catch( err )
                         {
@@ -599,7 +608,7 @@ function  updateDomainPage()
     
     try
     {
-        contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+        contract = getContract();
         res = contract.getDomain( current_domain );
         
         domain = {
@@ -611,7 +620,7 @@ function  updateDomainPage()
             root_id: res[5]
         }
         
-        $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
+        $("#domain_owner").text( new BigNumber(domain.owner) != 0 ? domain.owner : "NOT CLAIMED" );
 
         $("#domain_expires").text( domain.expires );
         var current_block = 0;
@@ -635,14 +644,17 @@ function  updateDomainPage()
     
         // Deturmine the status
 
-        var available = domain.owner == undefined || domain.owner == ""
+        var available = new BigNumber( domain.owner ) == 0
         var on_sale = domain.price == undefined || domain.price == 0
         var expired = domain.expires < current_block
         var mine = false;
         if( !available ) {
             for( var i = 0; i < my_accounts.length; i++ )
             {
-                if( areHexEq( my_accounts[i], domain.owner ) ) { mine = true; break; }
+                if( new BigNumber( my_accounts[i] ).eq( new BigNumber( domain.owner ) ) ) 
+                { 
+                    mine = true; break; 
+                }             
             }
         }
 
@@ -650,7 +662,10 @@ function  updateDomainPage()
         var forme = false;
         for( var i = 0; i < my_accounts.length; i++ )
         {
-            if( areHexEq( my_accounts[i], domain.transfer ) ) { mine = true; break; }
+            if( new BigNumber( my_accounts[i] ).eq( new BigNumber( domain.transfer ) ) ) 
+            { 
+                mine = true; break; 
+            }
         }
 
         $('#btn_act_claim').prop('disabled', !( expired || available ) );
@@ -671,33 +686,52 @@ function  updateDomainPage()
 
 
         $('#domain_status').text( status )
+        
+        // read all the IDS
+//        $("table#ids").find("tr:gt(0)").remove();
+//        $("table#ids tr:gt(0)").remove();
+//        $('table#ids > tbody:last').children( 'tr:not(:first)' ).remove();
+        $("table#ids > tbody").empty();
     
+        id = domain.root_id
+        
+        while( id != 0 ) {
+            id_res = contract.getId( current_domain, id ) 
+            
+            
+            id_hex = web3.toHex( id );
+            id_ascii = ""
+            try {
+                id_ascii = utf8.decode( toAscii( id_hex ) ) 
+            }
+            catch( x ) {}            
+            
+            val_hex = web3.toHex( id_res[0] );
+            val_ascii = ""
+            try {
+                val_ascii = utf8.decode( toAscii( val_hex ) ) 
+            }
+            catch( x ) {}            
+            
+            
+            
+            
+            $('table#ids > tbody').append(
+                $("<tr>")
+                    .append( $("<td>").text( id_ascii ) )
+                    .append( $("<td>").text( id_hex ) )
+                    .append( $("<td>").text( val_ascii ) )
+                    .append( $("<td>").text( val_hex ) )
+                    .append( $("<td>").text( "actions" ) )
+            );         
+            
+            id = id_res[1];
+        }
     }
     catch( x )
     {
             swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error")
         return;
-    }
-    
-    
-    $("#ids").find("tr:gt(0)").remove();
-    
-    for( var i = 0; i < ids.length; i++ )
-    {
-        if( ids[i].domain == current_domain.domain )
-        {
-            
-            $("#ids").append
-            (
-                $("tr")
-                .append( $("td").text( "haha ") )
-                .append( $("td").text( "haha ") )
-                .append( $("td").text( "haha ") )
-                .append( $("td").text( "haha ") )
-                .append( $("td").text( "haha ") )
-            )
-        }
-
     }
 }
 
