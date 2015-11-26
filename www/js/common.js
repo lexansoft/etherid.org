@@ -20,6 +20,8 @@ $().ready( function(e){
     {
         contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
         $("#stat_domains").text( contract.n_domains() );
+//        root_domain = web3.toHex( contract.root_domain() );
+//        alert( root_domain )
     }
     catch( x ) { }
     
@@ -89,19 +91,26 @@ $().ready( function(e){
     $("#btn_act_claim").click( function() {
         openActionPan( "claim"); 
         
-        my_accounts = web3.eth.accounts;      
-        
-        $("#act_claim_my_address").empty();
-        
-        for( var i = 0; i < my_accounts.length; i++ )
-        $("#act_claim_my_address")
-            .append( $("<option>").val( my_accounts[i] ).text( 
-                no0x(my_accounts[i]) + 
-                " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
-            ) );        
-        
-        lua = Cookies.get('etherid_last_used_address'); 
-        if( lua ) $("#act_claim_my_address").val( lua )
+        try
+        {
+            my_accounts = web3.eth.accounts;      
+
+            $("#act_claim_my_address").empty();
+
+            for( var i = 0; i < my_accounts.length; i++ )
+            $("#act_claim_my_address")
+                .append( $("<option>").val( my_accounts[i] ).text( 
+                    no0x(my_accounts[i]) + 
+                    " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
+                ) );        
+
+            lua = Cookies.get('etherid_last_used_address'); 
+            if( lua ) $("#act_claim_my_address").val( lua )
+        }
+        catch( x ) 
+        {
+            swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error" ) 
+        }
         
     })
 
@@ -115,7 +124,7 @@ $().ready( function(e){
         
         swal({   
             title: "Are you sure?",   
-            text: "You are about to claim the domain (" + current_domain.domain + 
+            text: "You are about to claim the domain (" + web3.toHex( current_domain ) + 
                     " ). Your ownership will expire in " + expires + " blocks."  ,   
             type: "warning",   
             showCancelButton: true,   
@@ -131,22 +140,26 @@ $().ready( function(e){
                     
                     gp = web3.eth.gasPrice;
                     
+                    contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
+                    
                     var params = {
                                 gas: 200000,
-                                gasPrice : gp,
+//                                gasPrice : gp,
                                 from : wallet_to_use,
-                                to: ETHERID_CONTRACT,
+//                                to: ETHERID_CONTRACT,
                                 value: 0,
-                                data: makeData( [
-                                    "domain",
-                                    new BigNumber( current_domain.domain ),
-                                    expires,
-                                    0,
-                                    0 
-                                ] )
+//                                data: makeData( [
+//                                    "domain",
+//                                    new BigNumber( current_domain.domain ),
+//                                    expires,
+//                                    0,
+//                                    0 
+//                                ] )
                             };
 
-                    tx = web3.eth.sendTransaction( params );
+                    //tx = web3.eth.sendTransaction( params );
+                    contract.changeDomain.sendTransaction( current_domain, expires, 0, 0, params );
+                    
                 }
                 catch( err )
                 {
@@ -587,7 +600,16 @@ function  updateDomainPage()
     try
     {
         contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
-        domain = contract.getDomain( current_domain );
+        res = contract.getDomain( current_domain );
+        
+        domain = {
+            owner : res[0], 
+            expires: res[1], 
+            price: res[2], 
+            transfer: res[3], 
+            next_domain: res[4], 
+            root_id: res[5]
+        }
         
         $("#domain_owner").text( domain.owner ? domain.owner : "NOT CLAIMED" );
 
@@ -606,7 +628,7 @@ function  updateDomainPage()
         }
 
         $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
-        $("#domain_transfer").text( domain.transfer == "0x00" ? "" : domain.transfer );
+        $("#domain_transfer").text( new BigNumber( domain.transfer ) == 0 ? "" : domain.transfer );
 
         var my_accounts = []
         my_accounts = web3.eth.accounts;
@@ -842,8 +864,8 @@ function makeData( arr )
 function blosks2time( n )
 {
     secs = n * 12
-    hours = Math.Floor( secs / 60 / 60 )
-    days = Math.Floor( hours / 24 )
+    hours = Math.floor( secs / 60 / 60 )
+    days = Math.floor( hours / 24 )
     
     if( days > 0 ) return days + " days";
     if( hours > 0 ) return hours + " hours";
