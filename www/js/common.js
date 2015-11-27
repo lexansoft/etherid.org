@@ -6,12 +6,17 @@ ETHERID_ABI =
 domains = new Array()
 ids = new Array()
 current_domain = 0
+current_block = 0
 domain = {}
 ether_contract = undefined;
+var all_domains_table
+var all_domains_data = new Array();
+
 
 web3 = require('web3');
 
-ETH1 = new BigNumber( 1000000000000000000 );    
+ETH1 = new BigNumber( 1000000000000000000 );   
+SECONDS_PER_BLOCK = 12;
 ETH_SIGN = "\u{1D763}"
 
 function getContract(){
@@ -26,7 +31,6 @@ function getContract(){
 
 $().ready( function(e){ 
     
-
     try
     {
         web3.setProvider( new web3.providers.HttpProvider( ) );    
@@ -43,6 +47,11 @@ $().ready( function(e){
         {
             beforeActivate: function( event, ui ) 
             {
+                if( ui.newPanel[0].id == "tabs-all" ) {
+                    
+                    if( all_domains_data.length == 0 ) refreshAllDomains();
+                }
+                
             }    
 
         }
@@ -52,6 +61,10 @@ $().ready( function(e){
     $("input#search_domain").keyup(function( event ) {
         if( event.keyCode == 13 ) $("#btn_search_domain").click()
     });
+    
+
+    $("#btn_all_refresh").click( function() { refreshAllDomains(); } );
+    
     
     
     $("#btn_search_domain").click( function() {
@@ -631,7 +644,7 @@ function  updateDomainPage()
             if( blocks_left <= 0 ) $("#domain_expires").text( "EXPIRED" );
             else
             {
-                $("#domain_expires").text( domain.expires + " (in " + blosks2time( blocks_left ) + ")");
+                $("#domain_expires").text( domain.expires + " (in " + blocks2time( blocks_left ) + ")");
             }
         }
 
@@ -663,7 +676,7 @@ function  updateDomainPage()
         {
             if( new BigNumber( my_accounts[i] ).eq( new BigNumber( domain.transfer ) ) ) 
             { 
-                mine = true; break; 
+                forme = true; break; 
             }
         }
 
@@ -1016,9 +1029,9 @@ function makeData( arr )
     return d;
 }
 
-function blosks2time( n )
+function blocks2time( n )
 {
-    secs = n * 12
+    secs = n * SECONDS_PER_BLOCK;
     hours = Math.floor( secs / 60 / 60 )
     days = Math.floor( hours / 24 )
     
@@ -1029,3 +1042,118 @@ function blosks2time( n )
     return ""
 }
 
+function DomainRecord ( domain, owner, expires, price, transfer ) {
+    this.domain = domain;
+    this.owner = owner;
+    this.expires = expires;
+    this.price = price;
+    this.transfer = transfer;
+ 
+    this.name = function () {
+        
+        hex = web3.toHex( this.domain );
+        
+        ascii = ""
+        try {
+            ascii = utf8.decode( toAscii( hex ) ) 
+        }
+        catch( x ) {}
+
+        return ascii;
+    }
+
+    this.name_hex = function () {
+        return web3.toHex( this.domain );
+    }
+
+    this.days = function () {
+        
+        bks = this.expires - current_block;
+        
+        return Math.floor( bks * SECONDS_PER_BLOCK / 60 / 60 / 24 ); 
+    }
+
+    this.price_fine = function () {
+        
+        if( this.price == 0 ) return "";
+        return formatEther( this.price, "ETH");
+    }
+
+    this.stat = function () {
+        
+        if( this.expires <= current_block ) return "EXPIRED";
+        if( new BigNumber( this.price ) > 0  ) return "FOR SALE";
+        return "";
+    }
+
+};
+
+
+
+function refreshAllDomains()
+{
+    all_domains_data = []
+    
+    only_mine = $('#only_mine').is(":checked")
+    only_expired = $('#only_expired').is(":checked")
+    only_for_sale = $('#only_for_sale').is(":checked")
+    
+    try
+    {
+        current_block =  web3.eth.getBlock( "latest" ).number;      
+        var my_accounts = []
+        my_accounts = web3.eth.accounts;
+        
+        dn = contract.root_domain();
+        
+        while( new BigNumber( dn ) != 0 ) 
+        {
+            res = contract.getDomain( dn );
+        
+            d = new DomainRecord( dn, res[0], res[1], res[2], res[3] );
+            dn = res[4]
+
+            if( only_mine )
+            {
+                var mine = false;
+                for( var i = 0; i < my_accounts.length; i++ )
+                {
+                    if( new BigNumber( my_accounts[i] ).eq( new BigNumber( d.owner ) ) ) 
+                    { 
+                        mine = true; break; 
+                    }
+                }                    
+                if( !mine ) continue;
+            }
+            
+            if( only_expired && ( d.expires >= current_block ) ) continue;
+            if( only_for_sale && d.price == 0 ) continue;   
+            
+            all_domains_data.push( d ); 
+        }
+    }
+    catch( x )
+    {
+
+    }
+    
+    
+    if( all_domains_table ) all_domains_table.destroy();
+    
+     all_domains_table = $('#all_domains').DataTable( {
+        data : all_domains_data,
+        columns: [
+            { data: 'name', title: 'Name' },
+            { data: 'name_hex', title: 'Name(HEX)' },
+            { data: 'owner', title: "Owner" },
+            { data: 'expires', title: "Expires" },
+            { data: 'days', title: "Days Left" },
+            { data: 'price_fine' },
+            { data: 'stat', title: "Status" },
+        ]
+    } );        
+    
+    
+    
+    
+}

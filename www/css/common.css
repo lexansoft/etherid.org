@@ -211,3 +211,25 @@ table#ids thead {
     margin: 0.1em;
     font-size: 0.8em;
 }
+
+table#all_domains{
+    width: 100%;
+}
+
+#all_controls {
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #59869b;     
+    padding: 1em;
+    text-align: center;
+    margin-bottom: 2em;
+}
+
+#tabs-batch textarea {
+    font-size: 0.7em;
+}
+
+#tabs-batch td {
+    padding: 1em;
+}

@@ -8,6 +8,7 @@
 
 <script src="js/jquery-2.1.3.min.js"></script>    
 <script src="js/jquery-ui.min.js"></script>    
+
 <script src="js/web3.min.js"></script>   
 <script src="js/sweetalert.min.js"></script>    
 <script src="js/bignumber.js"></script>    
@@ -15,6 +16,10 @@
 <script src="js/cookies.min.js"></script>    
 <script src="js/int256.js"></script>    
 <script src="js/common.js"></script>    
+    
+    
+<link rel="stylesheet" type="text/css" href="DataTables/datatables.min.css"/>
+<script type="text/javascript" src="DataTables/datatables.min.js"></script>   
     
 </head>
 
@@ -27,9 +32,11 @@
     
 <a id="logo" href="http://EtherID.org">EtherID.org</a>
 
+<!--
 <div id="search_block">
     <input size="40" id="search"></input> <button id="btn_search">Search</button>
 </div>
+-->
     
 </div>    
     
@@ -38,8 +45,8 @@
   <ul>
     <li><a href="#tabs-info">Info</a></li>
     <li><a href="#tabs-domain">Register/Manage Domain</a></li>
-    <li><a href="#tabs-my">My Domains</a></li>
-    <li><a href="#tabs-4sale">For Sale</a></li>
+    <li><a href="#tabs-all">All Domains</a></li>
+    <li><a href="#tabs-batch">Batch Operations</a></li>
   </ul>
   <div id="tabs-info">
     <p>EtherID is Ethereum Name Registar</p>
@@ -215,11 +222,55 @@
       
       
   </div>
-  <div id="tabs-my">
+  <div id="tabs-all">
+      
+      <div id="all_controls">
+          
+          <input type="checkbox" id="only_mine" >Only My Domains 
+          <input type="checkbox" id="only_expired" >Only Expired 
+          <input type="checkbox" id="only_for_sale" >Only For Sale
+          
+          
+          <button id="btn_all_refresh">Update List</button>
+          
+      </div>
+      
+      
+      
+      <table width="100%" id="all_domains">
+        <thead>
+        </thead>
+        <tbody>
+        </tbody>      
+      </table>
+      
   </div>
-  <div id="tabs-4sale">
-    
+
+  <div id="tabs-batch">
+      
+<h1>Batch Domain Claim</h1>
+      
+<table>
+
+    <tr>
+        <td>
+        List of Names:<br>
+        <textarea cols="40" rows="18"></textarea>      
+        </td>
+        <td>
+            Also claim:<br>
+            <input type="checkbox" id="uppercase" >Uppercase   <br>
+            <input type="checkbox" id="lowercase" >Lowercase   <br>
+        </td>
+        <td>
+             <button id="btn_batch_claim">Claim all domains</button>
+        </td>
+    </tr>
+</table>      
+      
   </div>
+
+
 </div>
     
     
