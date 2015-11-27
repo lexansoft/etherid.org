@@ -278,7 +278,7 @@ table#all_domains{
 }
 
 .progress {
-    height: 120px;
+    height: 200px;
 }
 
 .progress > svg {
