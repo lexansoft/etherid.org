@@ -15,6 +15,7 @@
 <script src="js/utf8.js"></script>    
 <script src="js/cookies.min.js"></script>    
 <script src="js/int256.js"></script>    
+<script src="js/progressbar.min.js"></script>    
 <script src="js/common.js"></script>    
     
     
@@ -203,7 +204,7 @@
 
         <div class="right"><button disabled id="btn_act_new_id">Add New ID</button></div>
 
-         <table id="ids">
+         <table id="ids"  >
              <thead>
                  <tr>
                      <td>ID</td>
@@ -225,7 +226,7 @@
   <div id="tabs-all">
       
       <div id="all_controls">
-          
+      
           <input type="checkbox" id="only_mine" >Only My Domains 
           <input type="checkbox" id="only_expired" >Only Expired 
           <input type="checkbox" id="only_for_sale" >Only For Sale
@@ -237,7 +238,7 @@
       
       
       
-      <table width="100%" id="all_domains">
+      <table  class="hover" cellspacing="0" width="100%" id="all_domains">
         <thead>
         </thead>
         <tbody>
@@ -248,22 +249,52 @@
 
   <div id="tabs-batch">
       
-<h1>Batch Domain Claim</h1>
+<h1>Batch Operations</h1>
       
 <table>
 
     <tr>
         <td>
-        List of Names:<br>
-        <textarea cols="40" rows="18"></textarea>      
+        List of Domains:<br>
+        <textarea cols="30" rows="26" id="batch_list"></textarea>      
         </td>
         <td>
-            Also claim:<br>
-            <input type="checkbox" id="uppercase" >Uppercase   <br>
-            <input type="checkbox" id="lowercase" >Lowercase   <br>
+            <div id="batch_claim_controls" class="batch_control_group">
+                <h1>Batch Claim</h1>
+                
+                Address to use:<br>
+                <select id="batch_claim_my_address"></select>
+                <div class="small">This address will be registered as owner of the domains.</div> 
+          
+                <table>
+                    <tr>
+                        <td>
+                        Also claim:<br>
+                        <input type="checkbox" checked id="uppercase" >Uppercase   <br>
+                        <input type="checkbox" checked id="lowercase" >Lowercase   <br>
+                        </td>
+                        <td>
+                            <button id="btn_batch_claim">Claim all domains</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div id="batch_prolong_controls" class="batch_control_group">
+                <h1>Batch Prolong</h1>
+                
+                <button id="btn_batch_prolong">Prolong</button>
+            </div>
+
         </td>
         <td>
-             <button id="btn_batch_claim">Claim all domains</button>
+            <div id="batch_claim_progress">
+                <div id="batch_title">No active process</div>
+                
+                <div class="progress" id="batch_progress"></div>
+                
+                <BR>
+                <button id="btn_batch_domain_cancel" disabled >Cancel</button>
+            </div>
         </td>
     </tr>
 </table>      

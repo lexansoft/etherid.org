@@ -232,4 +232,56 @@ table#all_domains{
 
 #tabs-batch td {
     padding: 1em;
+    vertical-align: top;
+}
+
+#tabs-batch h1 {
+    text-align: left;
+}
+
+
+
+
+.batch_control_group {
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #59869b;     
+    padding: 1em;
+    text-align: center;
+    margin-bottom: 2em;    
+    margin: 1em;
+}
+
+#batch_claim_controls
+{
+}
+
+#batch_claim_controls button
+{
+    margin: 1.5em;
+}
+
+#batch_claim_progress
+{
+/*
+    clear: both;
+    border-radius: 5px;
+    border-style: solid;
+    border-width: 2px;
+    border-color: #59869b;     
+    padding: 1em;
+    */
+    text-align: center;
+
+    margin: 1em;
+}
+
+.progress {
+    height: 120px;
+}
+
+.progress > svg {
+    height: 100%;
+    display: block;
 }

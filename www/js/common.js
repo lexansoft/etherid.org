@@ -9,6 +9,14 @@ current_domain = 0
 current_block = 0
 domain = {}
 ether_contract = undefined;
+batch_progress = {}
+batch_domain_list = []
+batch_domain_n = 0
+batch_domain_wallet_to_use = ""
+batch_domain_cancel = false;
+batch_domain_process = ""
+BATCH_PROCESS_TIMEOUT = 1000;
+
 var all_domains_table
 var all_domains_data = new Array();
 
@@ -29,7 +37,106 @@ function getContract(){
     return ether_contract;
 }
 
+function processBatch()
+{
+    if( batch_domain_cancel )
+    {
+        batch_progress.setText( "Canceled");
+        batch_domain_n = 0;
+                
+        $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_domain_cancel').prop('disabled', true );     
+        $("#batch_title").text( "No active process")
+        return;
+    }
+    
+    
+    if( batch_domain_n >= batch_domain_list.length )
+    {
+        batch_progress.setText( "Done");
+        batch_progress.animate( 1 );
+        batch_domain_n = 0;
+        $("#batch_list").val( "" );
+                
+        $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_domain_cancel').prop('disabled', true );          
+        $("#batch_title").text( "No active process")
+        return;
+    }
+    
+    name = batch_domain_list[ batch_domain_n ];
+    
+    if( name.substring( 0, 2 ) === "0x" ) 
+    {    
+        a = hexToArray( name )
+        hex = arrayToHex( a )    
+        hex = "0x" + hex.substr( 0, 64 )
+        ascii = ""
+        try {
+            ascii = utf8.decode( toAscii( hex ) ) 
+        }
+        catch( x ) {}
+    }
+    else
+    {
+        utf = utf8.encode( name ).slice(0, 32);
+        hex = "0x" + asciiToHex( utf )    
+        try {
+            ascii = utf8.decode( toAscii( hex ) ) 
+        }
+        catch( x ) {}
+    }    
+    
+    domain = new BigNumber( hex );
+    
+    batch_progress.setText( ascii );
+    
+    try 
+    {
+  
+        gp = web3.eth.gasPrice;
+        contract = getContract();
+
+        var params = {
+                    gas: 200000,
+                    from : batch_domain_wallet_to_use,
+                    value: 0
+                };
+
+        contract.changeDomain.sendTransaction( domain, 2000000, 0, 0, params );
+
+    }
+    catch( err )
+    {
+        swal( "Error", err, "error" )      
+        
+        batch_progress.setText( "Error");
+        batch_domain_n = 0;
+        $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_domain_cancel').prop('disabled', true );       
+        $("#batch_title").text( "No active process")
+        
+        return;
+    } 
+    
+    batch_domain_n++;
+    batch_progress.animate( batch_domain_n / batch_domain_list.length );
+    
+    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);
+    
+}
+
+
 $().ready( function(e){ 
+    
+    batch_progress = new ProgressBar.Circle('#batch_progress', {
+        color: '#59869b',
+        duration: 500,
+        easing: 'easeInOut',
+        strokeWidth: 2
+    });
+
+
     
     try
     {
@@ -51,9 +158,30 @@ $().ready( function(e){
                     
                     if( all_domains_data.length == 0 ) refreshAllDomains();
                 }
-                
-            }    
+                if( ui.newPanel[0].id == "tabs-batch" ) {
+                    
+                    try
+                    {
+                        my_accounts = web3.eth.accounts;      
 
+                        $("#batch_claim_my_address").empty();
+
+                        for( var i = 0; i < my_accounts.length; i++ )
+                        $("#batch_claim_my_address")
+                            .append( $("<option>").val( my_accounts[i] ).text( 
+                                no0x(my_accounts[i]) + 
+                                " (" + formatEther( web3.eth.getBalance( my_accounts[i] ), "ETH" ) + ")"                                            
+                            ) );        
+
+                        lua = Cookies.get('etherid_last_used_address'); 
+                        if( lua ) $("#batch_claim_my_address").val( lua )
+                    }
+                    catch( x ) 
+                    {
+                        swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error" ) 
+                    }                
+                }
+            }    
         }
     );    
     
@@ -65,6 +193,130 @@ $().ready( function(e){
 
     $("#btn_all_refresh").click( function() { refreshAllDomains(); } );
     
+    
+    
+    $("#btn_batch_prolong").click( function() { 
+        batch_domain_list = []
+        
+        for( var i = 0; i < res.length; i++ )
+        {
+            n = res[i].trim();
+            if( n == "" ) continue;
+            
+            batch_domain_list.push( n );
+            
+        }
+        
+        if( batch_domain_list.length == 0 ) {
+            swal("List Error!", "Cannot recognize any valid names in the list", "error" ) 
+            return;
+        }       
+
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to prolong " + batch_domain_list.length + 
+                    " domains."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, claim!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                batch_progress.setText( "");
+                batch_progress.animate( 0 );
+                batch_domain_n = 0;
+                batch_domain_process = "prolong";
+                $("#batch_title").text( "Prolonging in progress...")
+            
+            
+                
+                $('#btn_batch_claim').prop('disabled',true );                
+                $('#btn_batch_domain_cancel').prop('disabled',false );                
+                batch_domain_cancel = false;
+            
+                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+            }
+        );        
+        
+    });
+    
+    
+    $("#btn_batch_claim").click( function() { 
+        
+        list = $("#batch_list").val();
+        res = list.split(/[\s\,;\t]+/);
+        
+        uppercase = $('#uppercase').is(":checked")
+        lowercase = $('#lowercase').is(":checked")
+        
+        
+        batch_domain_list = []
+        
+        for( var i = 0; i < res.length; i++ )
+        {
+            n = res[i].trim();
+            if( n == "" ) continue;
+            
+            batch_domain_list.push( n );
+            
+            if( n.substring( 0, 2 ) != "0x" ) 
+            {
+                if( uppercase )
+                {
+                    ucn = n.toUpperCase();
+                    if( ucn != n ) batch_domain_list.push( ucn );
+                }
+
+                if( lowercase )
+                {
+                    lcn = n.toLowerCase();
+                    if( lcn != n && lcn != ucn ) batch_domain_list.push( lcn );
+                }
+            }
+        }
+        
+        if( batch_domain_list.length == 0 ) {
+            swal("List Error!", "Cannot recognize any valid names in the list", "error" ) 
+            return;
+        }       
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to claim " + batch_domain_list.length + 
+                    " domains."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, claim!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                batch_progress.setText( "");
+                batch_progress.animate( 0 );
+                batch_domain_process = "claim"
+                
+                $("#batch_title").text( "Claiming in progress...")
+                
+                batch_domain_wallet_to_use = $("#batch_claim_my_address").val()   
+                Cookies.set('etherid_last_used_address', batch_domain_wallet_to_use ); 
+
+                batch_domain_n = 0;
+            
+                
+                $('#btn_batch_claim').prop('disabled',true );                
+                $('#btn_batch_domain_cancel').prop('disabled',false );                
+                batch_domain_cancel = false;
+            
+                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+            }
+        );
+        
+        
+            
+    } );
+    
+    $("#btn_batch_domain_cancel").click( function() { 
+        batch_domain_cancel = true;
+    } );
     
     
     $("#btn_search_domain").click( function() {
@@ -1138,9 +1390,10 @@ function refreshAllDomains()
     }
     
     
-    if( all_domains_table ) all_domains_table.destroy();
+    //if( all_domains_table ) all_domains_table.destroy();
     
-     all_domains_table = $('#all_domains').DataTable( {
+    all_domains_table = $('#all_domains').DataTable( {
+        destroy: true,
         data : all_domains_data,
         columns: [
             { data: 'name', title: 'Name' },
@@ -1150,10 +1403,23 @@ function refreshAllDomains()
             { data: 'days', title: "Days Left" },
             { data: 'price_fine' },
             { data: 'stat', title: "Status" },
-        ]
+        ],
+        select: {
+            style:    'os',
+            selector: 'td:first-child',
+            blurable: true
+        }
     } );        
     
     
-    
-    
+    $('#all_domains tbody').on('click', 'tr', function () {
+        var data = all_domains_table.row( this ).data();
+        
+        current_domain = data.domain;
+        updateDomainPage();
+        $("#tabs").tabs("option", "active", 1);
+        
+    } );
 }
+    
+    
