@@ -25,7 +25,7 @@ only_expired = false
 only_for_sale = false
 
 BATCH_PROCESS_TIMEOUT = 1000;
-ALL_DOMAINS_TIMEOUT = 100;
+ALL_DOMAINS_TIMEOUT = 200;
 ALL_DOMAINS_SEARCH_PORTION = 112;
 
 var all_domains_table
@@ -1372,6 +1372,15 @@ function refreshAllDomainsPortion() {
             all_domains_curent_domain = res[4];
 
             all_domains_n++;
+
+            this_portion_n++;
+            if( this_portion_n > ALL_DOMAINS_SEARCH_PORTION ) {
+                setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
+                
+                update_list_progress.set( all_domains_n / n_domains ); 
+                update_list_progress.setText( all_domains_n + "/" + n_domains ); 
+                return;
+            }
             
             if( only_mine )
             {
@@ -1410,14 +1419,6 @@ function refreshAllDomainsPortion() {
             
             if( ok ) all_domains_data.push( d ); 
             
-            this_portion_n++;
-            if( this_portion_n > ALL_DOMAINS_SEARCH_PORTION ) {
-                setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
-                
-                update_list_progress.set( all_domains_n / n_domains ); 
-                update_list_progress.setText( all_domains_n + "/" + n_domains ); 
-                return;
-            }
         }
     }
     catch( x )
@@ -1425,7 +1426,7 @@ function refreshAllDomainsPortion() {
         hex = web3.toHex( all_domains_curent_domain );
         swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
         
-        $("#all_domain_progress").fadeOut();
+        $("#all_domain_progress").hide();
         $('#btn_all_refresh').prop('disabled', false );  
         
         return;
@@ -1465,7 +1466,7 @@ function refreshAllDomainsPortion() {
     } );
     
     $('#btn_all_refresh').prop('disabled', false );  
-    $("#all_domain_progress").fadeOut();
+    $("#all_domain_progress").hide();
 }
 
 function refreshAllDomains()
@@ -1489,7 +1490,7 @@ function refreshAllDomains()
         all_domains_curent_domain = contract.root_domain();
         all_domains_n = 0;
 
-        $("#all_domain_progress").fadeIn();
+        $("#all_domain_progress").show();
         update_list_progress.set( 0 ); 
         update_list_progress.setText( "...Updating");
     }
