@@ -227,13 +227,25 @@
       
       <div id="all_controls">
       
-          <input type="checkbox" id="only_mine" >Only My Domains 
-          <input type="checkbox" id="only_expired" >Only Expired 
-          <input type="checkbox" id="only_for_sale" >Only For Sale
-          
-          
-          <button id="btn_all_refresh">Update List</button>
-          
+          <table width="100%"  style="height:9em;">
+              <tr>
+                  <td style="text-align: center">
+                      <br>
+                      Pattern: <input size="20" id="all_domains_pattern"></input>
+                      <input type="checkbox" id="only_mine" checked >Only My Domains 
+                      <input type="checkbox" id="only_expired" >Only Expired 
+                      <input type="checkbox" id="only_for_sale" >Only For Sale
+                        <br><br>
+                      <button id="btn_all_refresh">Update List</button>
+                  </td>
+                  <td  style="text-align: center" width="125">
+                      <div id="all_domain_progress" style="display:none">
+                          <div class="progress" id="update_list_progress"></div>
+                          <button id="btn_all_cancel" >Cancel</button>
+                      </div>
+                  </td>
+              </tr>
+          </table>
       </div>
       
       

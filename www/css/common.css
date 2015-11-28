@@ -281,6 +281,11 @@ table#all_domains{
     height: 200px;
 }
 
+#update_list_progress {
+    height: 100px;
+    padding: 5px;
+}
+
 .progress > svg {
     height: 100%;
     display: block;

@@ -15,11 +15,22 @@ batch_domain_n = 0
 batch_domain_wallet_to_use = ""
 batch_domain_cancel = false;
 batch_domain_process = ""
+
+all_domains_data = []
+all_domains_curent_domain = 0
+all_domains_n = 0;
+all_domain_pattern = ""
+only_mine = false
+only_expired = false
+only_for_sale = false
+
 BATCH_PROCESS_TIMEOUT = 1000;
+ALL_DOMAINS_TIMEOUT = 100;
+ALL_DOMAINS_SEARCH_PORTION = 112;
 
 var all_domains_table
 var all_domains_data = new Array();
-
+my_accounts = [];
 
 web3 = require('web3');
 
@@ -123,7 +134,6 @@ function processBatch()
     batch_progress.animate( batch_domain_n / batch_domain_list.length );
     
     setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);
-    
 }
 
 
@@ -136,6 +146,12 @@ $().ready( function(e){
         strokeWidth: 2
     });
 
+    update_list_progress = new ProgressBar.Circle('#update_list_progress', {
+        color: '#59869b',
+        duration: 500,
+        easing: 'easeInOut',
+        strokeWidth: 2
+    });
 
     
     try
@@ -1341,30 +1357,22 @@ function DomainRecord ( domain, owner, expires, price, transfer ) {
 };
 
 
+function refreshAllDomainsPortion() {
+    var this_portion_n = 0;
 
-function refreshAllDomains()
-{
-    all_domains_data = []
-    
-    only_mine = $('#only_mine').is(":checked")
-    only_expired = $('#only_expired').is(":checked")
-    only_for_sale = $('#only_for_sale').is(":checked")
-    
     try
     {
-        current_block =  web3.eth.getBlock( "latest" ).number;      
-        var my_accounts = []
-        my_accounts = web3.eth.accounts;
+        var n_domains =  contract.n_domains();
         
-        dn = contract.root_domain();
-        
-        while( new BigNumber( dn ) != 0 ) 
+        while( new BigNumber( all_domains_curent_domain ) != 0 ) 
         {
-            res = contract.getDomain( dn );
+            res = contract.getDomain( all_domains_curent_domain );
         
-            d = new DomainRecord( dn, res[0], res[1], res[2], res[3] );
-            dn = res[4]
+            d = new DomainRecord( all_domains_curent_domain, res[0], res[1], res[2], res[3] );
+            all_domains_curent_domain = res[4];
 
+            all_domains_n++;
+            
             if( only_mine )
             {
                 var mine = false;
@@ -1381,15 +1389,50 @@ function refreshAllDomains()
             if( only_expired && ( d.expires >= current_block ) ) continue;
             if( only_for_sale && d.price == 0 ) continue;   
             
-            all_domains_data.push( d ); 
+            var ok = true;
+
+            if( all_domain_pattern != "" ) {
+                ok = false;
+                
+                hex = web3.toHex( d.domain );
+                
+                if( hex.match( all_domain_pattern ) ) { ok = true }
+                else
+                {
+                    ascii = ""
+                    try {
+                        ascii = utf8.decode( toAscii( hex ) ) 
+                    }
+                    catch( x ) {}
+                    if( ascii.match( all_domain_pattern ) ) { ok = true }
+                }
+            }
+            
+            if( ok ) all_domains_data.push( d ); 
+            
+            this_portion_n++;
+            if( this_portion_n > ALL_DOMAINS_SEARCH_PORTION ) {
+                setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
+                
+                update_list_progress.set( all_domains_n / n_domains ); 
+                update_list_progress.setText( all_domains_n + "/" + n_domains ); 
+                return;
+            }
         }
     }
     catch( x )
     {
-
+        hex = web3.toHex( all_domains_curent_domain );
+        swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
+        
+        $("#all_domain_progress").fadeOut();
+        $('#btn_all_refresh').prop('disabled', false );  
+        
+        return;
     }
     
-    
+    update_list_progress.set( 1 ); 
+
     //if( all_domains_table ) all_domains_table.destroy();
     
     all_domains_table = $('#all_domains').DataTable( {
@@ -1420,6 +1463,45 @@ function refreshAllDomains()
         $("#tabs").tabs("option", "active", 1);
         
     } );
+    
+    $('#btn_all_refresh').prop('disabled', false );  
+    $("#all_domain_progress").fadeOut();
+}
+
+function refreshAllDomains()
+{
+    try
+    {
+        current_block =  web3.eth.getBlock( "latest" ).number;      
+        my_accounts = []
+        my_accounts = web3.eth.accounts;
+        
+        all_domains_curent_domain = contract.root_domain();
+        
+        all_domains_data = []
+        all_domains_n = 0;
+
+        only_mine = $('#only_mine').is(":checked")
+        only_expired = $('#only_expired').is(":checked")
+        only_for_sale = $('#only_for_sale').is(":checked")
+        all_domain_pattern = $("#all_domains_pattern").val();
+
+        all_domains_curent_domain = contract.root_domain();
+        all_domains_n = 0;
+
+        $("#all_domain_progress").fadeIn();
+        update_list_progress.set( 0 ); 
+        update_list_progress.setText( "...Updating");
+    }
+    catch( x )
+    {
+        swal("Web3 Error!", "Cannot connect to the Ethereum network. Please install and run an Ethereum client. \n(" + x + ")", "error" ) 
+        return;
+    }
+    
+    $('#btn_all_refresh').prop('disabled', true );  
+    setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
+    
 }
     
     
