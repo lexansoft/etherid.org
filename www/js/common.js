@@ -1,6 +1,7 @@
-ETHERID_CONTRACT = "0x7aa97a7aa4c3a1f07ac3ca76be286e70dc804162"
+ETHERID_CONTRACT = "0x18f74374dee5a323ef1d0fe7bbd16c9a16ad3bce"
 ETHERID_ABI = 
-[{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
+[{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"},{"name":"prev_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
+
 ;
 
 domains = new Array()
@@ -15,11 +16,14 @@ batch_domain_n = 0
 batch_domain_wallet_to_use = ""
 batch_domain_cancel = false;
 batch_domain_process = ""
+batch_is_active = false;
+batch_price = 0;
 
 all_domains_data = []
 all_domains_curent_domain = 0
 all_domains_n = 0;
 all_domain_pattern = ""
+all_domains_cancel = false;
 only_mine = false
 only_expired = false
 only_for_sale = false
@@ -42,8 +46,12 @@ function getContract(){
     if( ether_contract ) return ether_contract;
     ether_contract = web3.eth.contract(ETHERID_ABI).at(ETHERID_CONTRACT);
     ether_contract.DomainChanged().watch( function( error, result ) {
-        $("#stat_domains").text( contract.n_domains() );
-        updateDomainPage()
+        
+        if( !batch_is_active )
+        {
+            $("#stat_domains").text( contract.n_domains() );
+            updateDomainPage()
+        }
     });
     return ether_contract;
 }
@@ -56,8 +64,11 @@ function processBatch()
         batch_domain_n = 0;
                 
         $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );     
         $("#batch_title").text( "No active process")
+        batch_is_active = false;
         return;
     }
     
@@ -67,11 +78,14 @@ function processBatch()
         batch_progress.setText( "Done");
         batch_progress.animate( 1 );
         batch_domain_n = 0;
-        $("#batch_list").val( "" );
+        if( batch_domain_process == "claim" ) $("#batch_list").val( "" );
                 
         $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );          
         $("#batch_title").text( "No active process")
+        batch_is_active = false;
         return;
     }
     
@@ -104,28 +118,61 @@ function processBatch()
     
     try 
     {
-  
-        gp = web3.eth.gasPrice;
+        var params  = {}
         contract = getContract();
+        
+        switch( batch_domain_process )
+        {
+            case "claim":            
+                params = {
+                            gas: 200000,
+                            from : batch_domain_wallet_to_use,
+                            value: 0
+                        };
+                contract.changeDomain.sendTransaction( domain, 2000000, 0, 0, params );
+                break;
+            case "prolong":            
+                
+                res = contract.getDomain( domain );
 
-        var params = {
-                    gas: 200000,
-                    from : batch_domain_wallet_to_use,
-                    value: 0
-                };
+                d = new DomainRecord( domain, res[0], res[1], res[2], res[3] );
+                
+                params = {
+                            gas: 200000,
+                            from : d.owner,
+                            value: 0
+                        };
+                contract.changeDomain.sendTransaction( domain, 2000000, d.price, d.transfer, params );
+                break;
+            case "price":            
+                res = contract.getDomain( domain );
 
-        contract.changeDomain.sendTransaction( domain, 2000000, 0, 0, params );
+                d = new DomainRecord( domain, res[0], res[1], res[2], res[3] );
+                
+                params = {
+                            gas: 200000,
+                            from : d.owner,
+                            value: 0
+                        };
+                contract.changeDomain.sendTransaction( domain, 2000000, batch_price, d.transfer, params );
+                break;
+        }
+
+
 
     }
     catch( err )
     {
-        swal( "Error", err, "error" )      
+        swal( "Error", "Domain: " + hex + " (" + err + ")", "error" );
         
         batch_progress.setText( "Error");
         batch_domain_n = 0;
         $('#btn_batch_claim').prop('disabled', false );                
+        $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );       
         $("#batch_title").text( "No active process")
+        batch_is_active = false;
         
         return;
     } 
@@ -172,7 +219,7 @@ $().ready( function(e){
             {
                 if( ui.newPanel[0].id == "tabs-all" ) {
                     
-                    if( all_domains_data.length == 0 ) refreshAllDomains();
+                    //if( all_domains_data.length == 0 ) refreshAllDomains();
                 }
                 if( ui.newPanel[0].id == "tabs-batch" ) {
                     
@@ -208,11 +255,14 @@ $().ready( function(e){
     
 
     $("#btn_all_refresh").click( function() { refreshAllDomains(); } );
-    
+    $("#btn_all_cancel").click( function() { all_domains_cancel = true; } );
     
     
     $("#btn_batch_prolong").click( function() { 
         batch_domain_list = []
+        
+        list = $("#batch_list").val();
+        res = list.split(/[\s\,;\t\"\']+/);
         
         for( var i = 0; i < res.length; i++ )
         {
@@ -234,7 +284,7 @@ $().ready( function(e){
                     " domains."  ,   
             type: "warning",   
             showCancelButton: true,   
-            confirmButtonText: "Yes, claim!",
+            confirmButtonText: "Yes, prolong!",
             closeOnConfirm: true,    
             },
             function(isConfirm){   
@@ -247,8 +297,66 @@ $().ready( function(e){
             
                 
                 $('#btn_batch_claim').prop('disabled',true );                
+                $('#btn_batch_price').prop('disabled',true );                
+                $('#btn_batch_prolong').prop('disabled',true );                
                 $('#btn_batch_domain_cancel').prop('disabled',false );                
                 batch_domain_cancel = false;
+                batch_is_active = true;
+            
+                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+            }
+        );        
+        
+    });
+    
+    $("#btn_batch_price").click( function() { 
+        batch_domain_list = []
+        
+        list = $("#batch_list").val();
+        res = list.split(/[\s\,;\t\"\']+/);
+        
+        for( var i = 0; i < res.length; i++ )
+        {
+            n = res[i].trim();
+            if( n == "" ) continue;
+            
+            batch_domain_list.push( n );
+            
+        }
+        
+        if( batch_domain_list.length == 0 ) {
+            swal("List Error!", "Cannot recognize any valid names in the list", "error" ) 
+            return;
+        }
+        
+        price_in_eth = $("#batch_price").val()
+        batch_price = web3.toWei( new BigNumber( price_in_eth ), "ether" );
+            
+
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to set price for " + batch_domain_list.length + 
+                    " domains to " + formatEther( batch_price, "ETH") + "."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, set price!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                batch_progress.setText( "");
+                batch_progress.animate( 0 );
+                batch_domain_n = 0;
+                batch_domain_process = "price";
+                $("#batch_title").text( "Pricing in progress...")
+            
+            
+                
+                $('#btn_batch_claim').prop('disabled',true );                
+                $('#btn_batch_price').prop('disabled',true );                
+                $('#btn_batch_prolong').prop('disabled',true );                
+                $('#btn_batch_domain_cancel').prop('disabled',false );                
+                batch_domain_cancel = false;
+                batch_is_active = true;
             
                 setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
             }
@@ -257,10 +365,109 @@ $().ready( function(e){
     });
     
     
+    $("#btn_download_ascii").click( function() { 
+        var csv = "";
+        
+        for( var i = 0; i < all_domains_data.length; i++ )
+        {
+            csv += all_domains_data[i].name() + "\n";
+        }
+        
+        var downloadLink = document.createElement("a");
+        var blob = new Blob([ csv ] );
+        var url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.target = "names.csv";
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    });
+        
+    $("#btn_download_hex").click( function() { 
+        var csv = "";
+        
+        for( var i = 0; i < all_domains_data.length; i++ )
+        {
+            csv += all_domains_data[i].name_hex() + "\n";
+        }
+        
+        var downloadLink = document.createElement("a");
+        var blob = new Blob([ csv ] );
+        var url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.target = "hex.csv";
+
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);        
+    });
+        
+    $("#btn_download_all").click( function() { 
+        
+        swal({   
+            title: "Are you sure?",   
+            text: "Listing all the registered domains is a long operation. It will takes several minutes."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, start!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                var csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
+
+                try
+                {
+                    var nn = contract.root_domain();
+
+                    while( new BigNumber( nn ) != 0 ) 
+                    {
+                        res = contract.getDomain( nn );
+
+                        d = new DomainRecord( nn, res[0], res[1], res[2], res[3] );
+                        nn = res[4];
+
+                    
+                        csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
+                        csv += d.name_hex() + ",";
+                        csv += d.owner + ",";
+                        csv += web3.fromWei( d.price, "ether" ) + ",";
+                        csv += d.expires + ",";
+                        csv += d.days() + ",";
+                        csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
+                        csv += d.stat() + "\n";
+                    }
+                }
+                catch( x )
+                {
+                    hex = web3.toHex( all_domains_curent_domain );
+                    swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
+
+                    $("#all_domain_progress").hide();
+                    $('#btn_all_refresh').prop('disabled', false );  
+
+                    return;
+                }
+            
+                var downloadLink = document.createElement("a");
+                var blob = new Blob([ csv ] );
+                var url = URL.createObjectURL(blob);
+                downloadLink.href = url;
+                downloadLink.target = "all.csv";
+                downloadLink.download = "all.csv";
+
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);        
+            }
+        );        
+    });
+    
+        
     $("#btn_batch_claim").click( function() { 
         
         list = $("#batch_list").val();
-        res = list.split(/[\s\,;\t]+/);
+        res = list.split(/[\s\,;\t\"\']+/);
         
         uppercase = $('#uppercase').is(":checked")
         lowercase = $('#lowercase').is(":checked")
@@ -319,9 +526,12 @@ $().ready( function(e){
             
                 
                 $('#btn_batch_claim').prop('disabled',true );                
+                $('#btn_batch_prolong').prop('disabled',true );                
+                $('#btn_batch_price').prop('disabled',true );                
                 $('#btn_batch_domain_cancel').prop('disabled',false );                
                 batch_domain_cancel = false;
-            
+                batch_is_active = true;
+
                 setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
             }
         );
@@ -596,7 +806,8 @@ $().ready( function(e){
     $("#btn_act_sell_domain").click( function() {
         
         price_in_eth = $("#action_sell #price").val()
-        price = new BigNumber( price_in_eth ) * ETH1;
+        price = web3.toWei( new BigNumber( price_in_eth ), "ether" );
+        
         
         expires = new BigNumber( $("#action_sell #expires").val() )
         
@@ -1466,11 +1677,16 @@ function refreshAllDomainsPortion() {
     } );
     
     $('#btn_all_refresh').prop('disabled', false );  
+    $('#btn_download_ascii').prop('disabled', all_domains_data == 0 );  
+    $('#btn_download_hex').prop('disabled', all_domains_data == 0 );  
     $("#all_domain_progress").hide();
+    
 }
 
 function refreshAllDomains()
 {
+    all_domains_cancel = false;
+    
     try
     {
         current_block =  web3.eth.getBlock( "latest" ).number;      

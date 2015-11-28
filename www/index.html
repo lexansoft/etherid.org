@@ -248,7 +248,11 @@
           </table>
       </div>
       
-      
+      <div style="text-align:right;margin-bottom:1em;">
+           <button id="btn_download_ascii" disabled>names.csv</button>
+           <button id="btn_download_hex" disabled >hex.csv</button>
+           <button id="btn_download_all">all.csv</button>
+      </div>
       
       <table  class="hover" cellspacing="0" width="100%" id="all_domains">
         <thead>
@@ -268,7 +272,7 @@
     <tr>
         <td>
         List of Domains:<br>
-        <textarea cols="30" rows="26" id="batch_list"></textarea>      
+        <textarea cols="30" rows="40" id="batch_list"></textarea>      
         </td>
         <td>
             <div id="batch_claim_controls" class="batch_control_group">
@@ -295,6 +299,14 @@
                 <h1>Batch Prolong</h1>
                 
                 <button id="btn_batch_prolong">Prolong</button>
+            </div>
+            <div id="batch_price_controls" class="batch_control_group">
+                <h1>Batch Setting Price</h1>
+                  
+                Price <input size="12" id="batch_price" value="0"></input> ETH.
+                  <div class="small">Set the price you aggree to sell the domains for. 0 sets to "No For Sale" mode.</div>                  
+                <BR>
+                <button id="btn_batch_price">Set Price</button>
             </div>
 
         </td>
