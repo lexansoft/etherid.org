@@ -1,4 +1,4 @@
-// Ethereum Name Registar as it should be!
+// Ethereum Name Registrar as it should be!
 //
 // Written by Alexandre Naverniouk
 // twitter @AlexNa
