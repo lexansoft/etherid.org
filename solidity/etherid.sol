@@ -1,34 +1,40 @@
+// Ethereum Name Registar as it should be!
+//
+// Written by Alexandre Naverniouk
+// twitter @AlexNa
+
+
 contract EtherId {
 
-uint constant MAX_PROLONG = 2000000;
+uint constant MAX_PROLONG = 2000000; // Maximum number of blocks to prolong the ownership. About one year.
 
-uint public n_domains = 0;
-uint public root_domain = 0;
+uint public n_domains = 0;      // total number of registered domains
+uint public root_domain = 0;    // name of the first domain in the linked list
 
-struct Id {
+struct Id {                     // Id record. Double linked list. Allows to delete ID
     uint value;
     uint next_id;
     uint prev_id;
 }
 
-struct Domain {
+struct Domain {                 // Domain record. Linked list. 
     address owner;
     uint expires;
     uint price;
     address transfer;
     uint next_domain;
-    uint root_id;
-    mapping (uint => Id) ids;
+    uint root_id;               // Name of the first ID in the list
+    mapping (uint => Id) ids;   // Map of the ID's
 }
 
-mapping (uint => Domain) domains;
+mapping (uint => Domain) domains; // Map of the domains
 
 function EtherId()
 {
 
 }
 
-event DomainChanged( address indexed sender, uint domain, uint id );
+event DomainChanged( address indexed sender, uint domain, uint id ); // Fired every time the registry is changed
 
 function getId( uint domain, uint id ) constant returns (uint v, uint next_id, uint prev_id )
 {
@@ -55,61 +61,67 @@ function getDomain( uint domain ) constant returns
 function changeDomain( uint domain, uint expires, uint price, address transfer ) 
 {
     Domain d;
+    
+    uint money_used = 0;            // How much was spent here
 
-    if( expires > MAX_PROLONG ) 
+    if( expires > MAX_PROLONG )     // Not prolong too much
     {
         expires = MAX_PROLONG;
     }
 
     d = domains[ domain ];
 
-    if( d.owner == 0 ) 
-    { //does not exists yet
-        d.owner = msg.sender;
+    if( d.owner == 0 )              // 0 means the domain is not yet registered
+    { 
+        d.owner = msg.sender;       // Simple calim
         d.price = price;
         d.transfer = transfer;
         d.expires = block.number + expires;
-        d.next_domain = root_domain;
+        
+        d.next_domain = root_domain;// Put the new domain into the linked list
         root_domain = domain;
+        
         n_domains = n_domains + 1;
         DomainChanged( msg.sender, domain, 0 );
     }
-    else
+    else                            // The domain already has an owner
     {
-        if( d.owner == msg.sender || block.number > d.expires ) {
-            d.owner = msg.sender;
+        if( d.owner == msg.sender || block.number > d.expires ) { // If it is yours or expired, you have all rights to change
+            d.owner = msg.sender;   // Possible change of the ownershp is expired
             d.price = price;
             d.transfer = transfer;
             d.expires = block.number + expires;
             DomainChanged( msg.sender, domain, 0 );
         }
-        else
+        else                        // Not yours, not expired
         {
-            if( d.transfer != 0 ) {
-                if( d.transfer == msg.sender && msg.value >= d.price ) 
+            if( d.transfer != 0 ) { // Set for transfer
+                if( d.transfer == msg.sender && msg.value >= d.price ) // ... for you and enought money 
                 {
                     if( msg.value > 0 ) 
                     { 
-                        d.owner.send( msg.value );
+                        address( d.owner ).send( d.price ); // All the money goes to the owner
+                        money_used = d.price;
                     }
 
-                    d.owner = msg.sender;
+                    d.owner = msg.sender;   // Change the ownership
                     d.price = price;
                     d.transfer = transfer;
                     d.expires = block.number + expires;
                     DomainChanged( msg.sender, domain, 0 );
                 }
             } 
-            else
+            else  // not set for transfer, but...
             {
-                if( d.price > 0 &&  msg.value >= d.price ) 
+                if( d.price > 0 &&  msg.value >= d.price ) // ... on sale, and enough money
                 {
                     if( msg.value > 0 ) 
                     { 
-                        address( d.owner ).send( msg.value );
+                        address( d.owner ).send( d.price );
+                        money_used = d.price;
                     }
 
-                    d.owner = msg.sender;
+                    d.owner = msg.sender;   // Change the ownership
                     d.price = price;
                     d.transfer = transfer;
                     d.expires = block.number + expires;
@@ -118,6 +130,12 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
             }
         }
     }
+    
+    if( msg.value > money_used ) // If transaction has more money than was needed
+    {
+        msg.sender.send( msg.value - money_used ); // We do not need your leftover
+    }
+    
 }
 
 function changeId( uint domain, uint name, uint value ) {
@@ -125,36 +143,36 @@ function changeId( uint domain, uint name, uint value ) {
     Domain d;
     d = domains[ domain ];
 
-    if( d.owner == msg.sender ) 
+    if( d.owner == msg.sender )     // Only owner can manage the ID's
     {
         Id id;
         id = d.ids[ name ];
 
-        if( id.value == 0 ) {
-            if( value != 0 ) {
-                id.value = value;
-                id.next_id = d.root_id;
-                // id.prev_id = 0;
+        if( id.value == 0 ) {       // 0 means the ID was not found
+            if( value != 0 ) {      // Only add non zero values
+                id.value = value;   
+                id.next_id = d.root_id; // Put into the head of the list
+                // id.prev_id = 0;  // 0 is the default, no need to assign
                 
                 if( d.root_id != 0 ) 
                 {
-                    d.ids[ d.root_id ].prev_id = name;
+                    d.ids[ d.root_id ].prev_id = name; // link the next ID back
                 }
 
-                d.root_id = name;
+                d.root_id = name;   
                 DomainChanged( msg.sender, domain, name );
             }
         }
-        else
+        else                        // The ID was found
         {
-            if( value != 0 )
+            if( value != 0 )        // Simple change of the value
             {
                 id.value = value;
                 DomainChanged( msg.sender, domain, name );
             }
-            else //delete the id
+            else                    // Deleting the ID
             {
-                if( id.prev_id != 0 )
+                if( id.prev_id != 0 ) // Modify the double linked list
                 {
                     d.ids[ id.prev_id ].next_id = id.next_id;   
                 }
@@ -168,12 +186,17 @@ function changeId( uint domain, uint name, uint value ) {
                     d.ids[ id.next_id ].prev_id = id.prev_id;   
                 }
                 
-                id.prev_id = 0;   
+                id.prev_id = 0;   // Clear the storage
                 id.next_id = 0;   
                 id.value = 0;   
                 DomainChanged( msg.sender, domain, name );
             }
         }
+    }
+    
+    if( msg.value > 0 ) // If transaction has any money...
+    {
+        msg.sender.send( msg.value ); // It is a mistake, so send it back
     }
 }
 

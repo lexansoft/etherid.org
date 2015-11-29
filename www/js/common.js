@@ -1,6 +1,7 @@
-ETHERID_CONTRACT = "0x18f74374dee5a323ef1d0fe7bbd16c9a16ad3bce"
+ETHERID_CONTRACT = "0x26ab6e9a82a173071611730307218d68ecbb1392"
 ETHERID_ABI = 
 [{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"},{"name":"prev_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
+
 
 ;
 
@@ -28,7 +29,7 @@ only_mine = false
 only_expired = false
 only_for_sale = false
 
-BATCH_PROCESS_TIMEOUT = 1000;
+BATCH_PROCESS_TIMEOUT = 15000;
 ALL_DOMAINS_TIMEOUT = 200;
 ALL_DOMAINS_SEARCH_PORTION = 112;
 
@@ -49,8 +50,12 @@ function getContract(){
         
         if( !batch_is_active )
         {
-            $("#stat_domains").text( contract.n_domains() );
-            updateDomainPage()
+            try 
+            {
+                $("#stat_domains").text( contract.n_domains() );
+                updateDomainPage()
+            }
+            catch( x ) {}
         }
     });
     return ether_contract;
@@ -67,8 +72,16 @@ function processBatch()
         $('#btn_batch_price').prop('disabled', false );                
         $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );     
-        $("#batch_title").text( "No active process")
+        $("#batch_title").text( "No active process")    
         batch_is_active = false;
+
+        try 
+        {
+            $("#stat_domains").text( contract.n_domains() );
+            updateDomainPage()
+        }
+        catch( x ) {}
+        
         return;
     }
     
@@ -86,6 +99,14 @@ function processBatch()
         $('#btn_batch_domain_cancel').prop('disabled', true );          
         $("#batch_title").text( "No active process")
         batch_is_active = false;
+        
+        try 
+        {
+            $("#stat_domains").text( contract.n_domains() );
+            updateDomainPage()
+        }
+        catch( x ) {}
+        
         return;
     }
     
@@ -173,6 +194,13 @@ function processBatch()
         $('#btn_batch_domain_cancel').prop('disabled', true );       
         $("#batch_title").text( "No active process")
         batch_is_active = false;
+        
+        try 
+        {
+            $("#stat_domains").text( contract.n_domains() );
+            updateDomainPage()
+        }
+        catch( x ) {}
         
         return;
     } 
@@ -288,22 +316,25 @@ $().ready( function(e){
             closeOnConfirm: true,    
             },
             function(isConfirm){   
-                batch_progress.setText( "");
-                batch_progress.animate( 0 );
-                batch_domain_n = 0;
-                batch_domain_process = "prolong";
-                $("#batch_title").text( "Prolonging in progress...")
-            
-            
-                
-                $('#btn_batch_claim').prop('disabled',true );                
-                $('#btn_batch_price').prop('disabled',true );                
-                $('#btn_batch_prolong').prop('disabled',true );                
-                $('#btn_batch_domain_cancel').prop('disabled',false );                
-                batch_domain_cancel = false;
-                batch_is_active = true;
-            
-                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                if( isConfirm ) 
+                {
+                    batch_progress.setText( "");
+                    batch_progress.animate( 0 );
+                    batch_domain_n = 0;
+                    batch_domain_process = "prolong";
+                    $("#batch_title").text( "Prolonging in progress...")
+
+
+
+                    $('#btn_batch_claim').prop('disabled',true );                
+                    $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_prolong').prop('disabled',true );                
+                    $('#btn_batch_domain_cancel').prop('disabled',false );                
+                    batch_domain_cancel = false;
+                    batch_is_active = true;
+
+                    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                }
             }
         );        
         
@@ -343,22 +374,25 @@ $().ready( function(e){
             closeOnConfirm: true,    
             },
             function(isConfirm){   
-                batch_progress.setText( "");
-                batch_progress.animate( 0 );
-                batch_domain_n = 0;
-                batch_domain_process = "price";
-                $("#batch_title").text( "Pricing in progress...")
-            
-            
-                
-                $('#btn_batch_claim').prop('disabled',true );                
-                $('#btn_batch_price').prop('disabled',true );                
-                $('#btn_batch_prolong').prop('disabled',true );                
-                $('#btn_batch_domain_cancel').prop('disabled',false );                
-                batch_domain_cancel = false;
-                batch_is_active = true;
-            
-                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                if( isConfirm )
+                {
+                    batch_progress.setText( "");
+                    batch_progress.animate( 0 );
+                    batch_domain_n = 0;
+                    batch_domain_process = "price";
+                    $("#batch_title").text( "Pricing in progress...")
+
+
+
+                    $('#btn_batch_claim').prop('disabled',true );                
+                    $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_prolong').prop('disabled',true );                
+                    $('#btn_batch_domain_cancel').prop('disabled',false );                
+                    batch_domain_cancel = false;
+                    batch_is_active = true;
+
+                    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                }
             }
         );        
         
@@ -414,51 +448,54 @@ $().ready( function(e){
             closeOnConfirm: true,    
             },
             function(isConfirm){   
-                var csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
-
-                try
+                if( isConfirm )
                 {
-                    var nn = contract.root_domain();
+                    var csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
 
-                    while( new BigNumber( nn ) != 0 ) 
+                    try
                     {
-                        res = contract.getDomain( nn );
+                        var nn = contract.root_domain();
 
-                        d = new DomainRecord( nn, res[0], res[1], res[2], res[3] );
-                        nn = res[4];
+                        while( new BigNumber( nn ) != 0 ) 
+                        {
+                            res = contract.getDomain( nn );
 
-                    
-                        csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
-                        csv += d.name_hex() + ",";
-                        csv += d.owner + ",";
-                        csv += web3.fromWei( d.price, "ether" ) + ",";
-                        csv += d.expires + ",";
-                        csv += d.days() + ",";
-                        csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
-                        csv += d.stat() + "\n";
+                            d = new DomainRecord( nn, res[0], res[1], res[2], res[3] );
+                            nn = res[4];
+
+
+                            csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
+                            csv += d.name_hex() + ",";
+                            csv += d.owner + ",";
+                            csv += web3.fromWei( d.price, "ether" ) + ",";
+                            csv += d.expires + ",";
+                            csv += d.days() + ",";
+                            csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
+                            csv += d.stat() + "\n";
+                        }
                     }
+                    catch( x )
+                    {
+                        hex = web3.toHex( all_domains_curent_domain );
+                        swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
+
+                        $("#all_domain_progress").hide();
+                        $('#btn_all_refresh').prop('disabled', false );  
+
+                        return;
+                    }
+
+                    var downloadLink = document.createElement("a");
+                    var blob = new Blob([ csv ] );
+                    var url = URL.createObjectURL(blob);
+                    downloadLink.href = url;
+                    downloadLink.target = "all.csv";
+                    downloadLink.download = "all.csv";
+
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);        
                 }
-                catch( x )
-                {
-                    hex = web3.toHex( all_domains_curent_domain );
-                    swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
-
-                    $("#all_domain_progress").hide();
-                    $('#btn_all_refresh').prop('disabled', false );  
-
-                    return;
-                }
-            
-                var downloadLink = document.createElement("a");
-                var blob = new Blob([ csv ] );
-                var url = URL.createObjectURL(blob);
-                downloadLink.href = url;
-                downloadLink.target = "all.csv";
-                downloadLink.download = "all.csv";
-
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);        
             }
         );        
     });
@@ -474,26 +511,40 @@ $().ready( function(e){
         
         
         batch_domain_list = []
+        no_doubles = {}
         
         for( var i = 0; i < res.length; i++ )
         {
             n = res[i].trim();
             if( n == "" ) continue;
             
-            batch_domain_list.push( n );
-            
+            if( !( n in no_doubles ) )
+            {
+                batch_domain_list.push( n );
+                no_doubles[ n ] = true;
+            }
+
             if( n.substring( 0, 2 ) != "0x" ) 
             {
                 if( uppercase )
                 {
                     ucn = n.toUpperCase();
-                    if( ucn != n ) batch_domain_list.push( ucn );
+                    
+                    if( !( ucn in no_doubles ) )
+                    {
+                        batch_domain_list.push( ucn );
+                        no_doubles[ ucn ] = true;
+                    }
                 }
 
                 if( lowercase )
                 {
                     lcn = n.toLowerCase();
-                    if( lcn != n && lcn != ucn ) batch_domain_list.push( lcn );
+                    if( !( lcn in no_doubles ) )
+                    {
+                        batch_domain_list.push( lcn );
+                        no_doubles[ lcn ] = true;
+                    }
                 }
             }
         }
@@ -513,26 +564,29 @@ $().ready( function(e){
             closeOnConfirm: true,    
             },
             function(isConfirm){   
-                batch_progress.setText( "");
-                batch_progress.animate( 0 );
-                batch_domain_process = "claim"
-                
-                $("#batch_title").text( "Claiming in progress...")
-                
-                batch_domain_wallet_to_use = $("#batch_claim_my_address").val()   
-                Cookies.set('etherid_last_used_address', batch_domain_wallet_to_use ); 
+                if( isConfirm )
+                {
+                    batch_progress.setText( "");
+                    batch_progress.animate( 0 );
+                    batch_domain_process = "claim"
 
-                batch_domain_n = 0;
-            
-                
-                $('#btn_batch_claim').prop('disabled',true );                
-                $('#btn_batch_prolong').prop('disabled',true );                
-                $('#btn_batch_price').prop('disabled',true );                
-                $('#btn_batch_domain_cancel').prop('disabled',false );                
-                batch_domain_cancel = false;
-                batch_is_active = true;
+                    $("#batch_title").text( "Claiming in progress...")
 
-                setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                    batch_domain_wallet_to_use = $("#batch_claim_my_address").val()   
+                    Cookies.set('etherid_last_used_address', batch_domain_wallet_to_use ); 
+
+                    batch_domain_n = 0;
+
+
+                    $('#btn_batch_claim').prop('disabled',true );                
+                    $('#btn_batch_prolong').prop('disabled',true );                
+                    $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_domain_cancel').prop('disabled',false );                
+                    batch_domain_cancel = false;
+                    batch_is_active = true;
+
+                    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                }
             }
         );
         
@@ -546,7 +600,10 @@ $().ready( function(e){
     
     
     $("#btn_search_domain").click( function() {
-        s = $("input#search_domain").val()
+        s = $("input#search_domain").val().trim();
+        
+        if( s == "" ) return;
+        
         hex = ""
         ascii = ""
 
@@ -635,34 +692,37 @@ $().ready( function(e){
             closeOnConfirm: false,    
             },
             function(isConfirm){   
-                try 
+                if( isConfirm )
                 {
-                    wallet_to_use = $("#act_claim_my_address").val()       
-                    
-                    Cookies.set('etherid_last_used_address', wallet_to_use ); 
-                    
-                    gp = web3.eth.gasPrice;
-                    
-                    contract = getContract();
-                    
-                    var params = {
-                                gas: 200000,
-                                from : wallet_to_use,
-                                value: 0
-                            };
+                    try 
+                    {
+                        wallet_to_use = $("#act_claim_my_address").val()       
 
-                    //tx = web3.eth.sendTransaction( params );
-                    contract.changeDomain.sendTransaction( current_domain, expires, 0, 0, params );
-                    
+                        Cookies.set('etherid_last_used_address', wallet_to_use ); 
+
+                        gp = web3.eth.gasPrice;
+
+                        contract = getContract();
+
+                        var params = {
+                                    gas: 200000,
+                                    from : wallet_to_use,
+                                    value: 0
+                                };
+
+                        //tx = web3.eth.sendTransaction( params );
+                        contract.changeDomain.sendTransaction( current_domain, expires, 0, 0, params );
+
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }            
+                    swal("Your claim is complete!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               
+                    openActionPan( "home"); 
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }            
-                swal("Your claim is complete!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");               
-                openActionPan( "home"); 
             }
         )
     })
@@ -704,40 +764,43 @@ $().ready( function(e){
             closeOnConfirm: false,    
             },
             function(isConfirm){   
-                try 
+                if( isConfirm )
                 {
-                    wallet_to_use = $("#act_buy_my_address").val()       
-                    
-                    Cookies.set('etherid_last_used_address', wallet_to_use ); 
-                    
-                    gp = web3.eth.gasPrice;
-                    
-                    var params = {
-                                gas: 200000,
-                                gasPrice : gp,
-                                from : wallet_to_use,
-                                to: ETHERID_CONTRACT,
-                                value: current_domain.price,
-                                data: makeData( [
-                                    "domain",
-                                    new BigNumber( current_domain.domain ),
-                                    expires,
-                                    0,
-                                    0 
-                                ] )
-                            };
+                    try 
+                    {
+                        wallet_to_use = $("#act_buy_my_address").val()       
 
-                    tx = web3.eth.sendTransaction( params );
+                        Cookies.set('etherid_last_used_address', wallet_to_use ); 
+
+                        gp = web3.eth.gasPrice;
+
+                        var params = {
+                                    gas: 200000,
+                                    gasPrice : gp,
+                                    from : wallet_to_use,
+                                    to: ETHERID_CONTRACT,
+                                    value: current_domain.price,
+                                    data: makeData( [
+                                        "domain",
+                                        new BigNumber( current_domain.domain ),
+                                        expires,
+                                        0,
+                                        0 
+                                    ] )
+                                };
+
+                        tx = web3.eth.sendTransaction( params );
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }            
+                    swal("You bought the domain!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction." +
+                         " If for some reason the ownership will not transfer, for example is you do not have enough funds on your address, then all your spent amount will be transfered back to you.", "success");               
+                    openActionPan( "home"); 
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }            
-                swal("You bought the domain!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction." +
-                     " If for some reason the ownership will not transfer, for example is you do not have enough funds on your address, then all your spent amount will be transfered back to you.", "success");               
-                openActionPan( "home"); 
             }
         )
     })
@@ -763,39 +826,41 @@ $().ready( function(e){
             confirmButtonText: "Yes, prolong!",
             closeOnConfirm: false,    
             },
-            function(isConfirm){   
-                try 
+            function(isConfirm){  
+                if( isConfirm ) 
                 {
-                    wallet_to_use = domain.owner;
-                    
-                    var params = {
-                                gas: 200000,
-                                from : wallet_to_use,
-                                value: 0
-                            };
+                    try 
+                    {
+                        wallet_to_use = domain.owner;
 
-                    //tx = web3.eth.sendTransaction( params );
-                    
-                    getContract().changeDomain.sendTransaction
-                    (
-                        current_domain, 
-                        expires, 
-                        domain.price, 
-                        domain.transfer, 
-                        params 
-                    );
-                    
+                        var params = {
+                                    gas: 200000,
+                                    from : wallet_to_use,
+                                    value: 0
+                                };
+
+                        //tx = web3.eth.sendTransaction( params );
+
+                        getContract().changeDomain.sendTransaction
+                        (
+                            current_domain, 
+                            expires, 
+                            domain.price, 
+                            domain.transfer, 
+                            params 
+                        );
+
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }            
+                    swal("Your ownership extended!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                    openActionPan( "home"); 
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }            
-                swal("Your ownership extended!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
-                openActionPan( "home"); 
             }
-
         )
     })
 
@@ -825,39 +890,41 @@ $().ready( function(e){
             closeOnConfirm: false,    
             },
             function(isConfirm){   
-                try 
+                if( isConfirm )
                 {
-                    wallet_to_use = domain.owner;
-                    
-                    var params = {
-                                gas: 200000,
-                                from : wallet_to_use,
-                                value: 0
-                            };
+                    try 
+                    {
+                        wallet_to_use = domain.owner;
 
-                    //tx = web3.eth.sendTransaction( params );
-                    
-                    getContract().changeDomain.sendTransaction
-                    (
-                        current_domain, 
-                        expires, 
-                        price, 
-                        domain.transfer, 
-                        params 
-                    );                    
-                    
-                    
+                        var params = {
+                                    gas: 200000,
+                                    from : wallet_to_use,
+                                    value: 0
+                                };
+
+                        //tx = web3.eth.sendTransaction( params );
+
+                        getContract().changeDomain.sendTransaction
+                        (
+                            current_domain, 
+                            expires, 
+                            price, 
+                            domain.transfer, 
+                            params 
+                        );                    
+
+
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }            
+                    swal("Price is set!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                    openActionPan( "home"); 
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }            
-                swal("Price is set!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
-                openActionPan( "home"); 
             }
-
         )
     })
     
@@ -889,35 +956,37 @@ $().ready( function(e){
             closeOnConfirm: false,    
             },
             function(isConfirm){   
-                try 
+                if( isConfirm )
                 {
-                    wallet_to_use = domain.owner;
-                    
-                    var params = {
-                                gas: 200000,
-                                from : wallet_to_use,
-                                value: 0
-                            };
+                    try 
+                    {
+                        wallet_to_use = domain.owner;
 
-                    getContract().changeDomain.sendTransaction
-                    (
-                        current_domain, 
-                        expires, 
-                        domain.price, 
-                        transfer, 
-                        params 
-                    );                                  
+                        var params = {
+                                    gas: 200000,
+                                    from : wallet_to_use,
+                                    value: 0
+                                };
+
+                        getContract().changeDomain.sendTransaction
+                        (
+                            current_domain, 
+                            expires, 
+                            domain.price, 
+                            transfer, 
+                            params 
+                        );                                  
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }            
+                    swal("Transfer is done!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
+                    openActionPan( "home"); 
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }            
-                swal("Transfer is done!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
-                openActionPan( "home"); 
             }
-
         )
     })
     
@@ -998,31 +1067,34 @@ $().ready( function(e){
                     closeOnConfirm: false,    
                     },
                     function(isConfirm){   
-                        try 
+                        if( isConfirm )
                         {
-                            wallet_to_use = domain.owner;
+                            try 
+                            {
+                                wallet_to_use = domain.owner;
 
-                            var params = {
-                                        gas: 200000,
-                                        from : wallet_to_use,
-                                        value: 0
-                                    };
+                                var params = {
+                                            gas: 200000,
+                                            from : wallet_to_use,
+                                            value: 0
+                                        };
 
-                            getContract().changeId.sendTransaction
-                            (
-                                current_domain, 
-                                current_id, 
-                                current_value, 
-                                params 
-                            );                             
+                                getContract().changeId.sendTransaction
+                                (
+                                    current_domain, 
+                                    current_id, 
+                                    current_value, 
+                                    params 
+                                );                             
+                            }
+                            catch( err )
+                            {
+                                swal( "Error", err, "error" )                
+                                return;
+                            }  
+                            swal("ID created!", 
+                                 "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
                         }
-                        catch( err )
-                        {
-                            swal( "Error", err, "error" )                
-                            return;
-                        }  
-                        swal("ID created!", 
-                             "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
                     }
                 )                
             });        
@@ -1275,31 +1347,34 @@ function editId( ) {
             closeOnConfirm: false,    
             },
             function(isConfirm){   
-                try 
+                if( isConfirm )
                 {
-                    wallet_to_use = domain.owner;
+                    try 
+                    {
+                        wallet_to_use = domain.owner;
 
-                    var params = {
-                                gas: 200000,
-                                from : wallet_to_use,
-                                value: 0
-                            };
+                        var params = {
+                                    gas: 200000,
+                                    from : wallet_to_use,
+                                    value: 0
+                                };
 
-                    getContract().changeId.sendTransaction
-                    (
-                        current_domain, 
-                        current_id, 
-                        current_value, 
-                        params 
-                    );                             
+                        getContract().changeId.sendTransaction
+                        (
+                            current_domain, 
+                            current_id, 
+                            current_value, 
+                            params 
+                        );                             
+                    }
+                    catch( err )
+                    {
+                        swal( "Error", err, "error" )                
+                        return;
+                    }  
+                    swal("ID changed!", 
+                         "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
                 }
-                catch( err )
-                {
-                    swal( "Error", err, "error" )                
-                    return;
-                }  
-                swal("ID changed!", 
-                     "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
             }
         )                
     });        
@@ -1317,31 +1392,34 @@ function deleteId( ) {
     closeOnConfirm: false,    
     },
     function(isConfirm){   
-        try 
+        if( isConfirm )
         {
-            wallet_to_use = domain.owner;
+            try 
+            {
+                wallet_to_use = domain.owner;
 
-            var params = {
-                        gas: 200000,
-                        from : wallet_to_use,
-                        value: 0
-                    };
+                var params = {
+                            gas: 200000,
+                            from : wallet_to_use,
+                            value: 0
+                        };
 
-            getContract().changeId.sendTransaction
-            (
-                current_domain, 
-                current_id, 
-                0, 
-                params 
-            );                             
+                getContract().changeId.sendTransaction
+                (
+                    current_domain, 
+                    current_id, 
+                    0, 
+                    params 
+                );                             
+            }
+            catch( err )
+            {
+                swal( "Error", err, "error" )                
+                return;
+            }  
+            swal("ID deleted!", 
+                 "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
         }
-        catch( err )
-        {
-            swal( "Error", err, "error" )                
-            return;
-        }  
-        swal("ID deleted!", 
-             "Please wait for several minutes while the Ethereum network processes the transaction.", "success");
     }
 )                
 
