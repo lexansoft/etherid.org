@@ -5,28 +5,27 @@ Ethereum ID Registar
 
 There are several Ethereum Name registars proposed/implemented. All of them are not what I expect the proper Name Registar should be.  
 
-The proper registar for names (or ID's) should provide:
-
-1. Easy way to register a domain
-2. Some solution to the problem of what happens if/when I lost my privat key
-3. Ability to register any number of ID's under the domain name
-4. Easy and simple procedure to sell the ownership of the DOMAIN to somebody else. 
-
-
-
 EtherId
 =======
 
-EtherId as a simple Ethereum contract that implements the following solution:
+EtherID is Ethereum Name Registrar
 
-1. You can register a domain by calling the register() contract call. Once you do that you own the full control on the registration record, BUT the ownership will expire after some time. (let's say a year)
+The main facts about the EtherID:
 
-2. At any moment while you are still holding the ownership you can prolong the ownersip by a simple call. If you fail to prolong your ownership, the record will go into the expired state, when anybody can call the ownership.
-If you lost your private key, after some time the record will be again available for the registration.
+You can register a Domain name for your Ethereum account for some period of time. The maximum time is 2,000,000 Ehtereum blocks ( about a year ) The domain name is in fact a binary 32 byte value. It can be interpreted as UTF8 encoded string.
+This is the solution for the name erosion problem. If you have registered a domain name and then lost the private key, the name will not be lost for everyone forever.
+While you own a domain you can prolong the ownership.
+If you failed to prolong the ownership and the domain expired, then anyoneone can calim the ownership for it.
+You can register as many as you want ID's for your domain (name:value pairs).
+If you want to sell your domain, put a price on it. Once the price is set, anyone can pay and take the ownership. No communication with you is needed.
+If you want to transfer the domin to someone, you simply specify the new address in the Transfer field. The owner of that address, and only him, can then pay the price and claim the domain.
+EtherId contract address: 0x3589d05a1ec4af9f65b0e5554e645707775ee43c
 
-3. For you own records you can set a price for which you will to sell the domain.  Once the price is set, anyone can pay the price and aquire the ownership. No communiction with you is needed at all. 
+You need to install one of the official Ethereum clients official Ethereum clients
+
+EtherID is an open source project. The code is available from https://github.com/lexansoft/EtherID.org
 
 
-
+Author: Alexandre Naverniouk
 
 
