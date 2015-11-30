@@ -1,6 +1,6 @@
 # etherid.org
 
-Ethereum ID Registar
+Ethereum ID Registrar
 ====================
 
 There are several Ethereum Name registars proposed/implemented. All of them are not what I expect the proper Name Registrar should be.  
