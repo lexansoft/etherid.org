@@ -1,8 +1,6 @@
-ETHERID_CONTRACT = "0x26ab6e9a82a173071611730307218d68ecbb1392"
+ETHERID_CONTRACT = "0x3589d05a1ec4af9f65b0e5554e645707775ee43c"
 ETHERID_ABI = 
 [{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"},{"name":"prev_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
-
-
 ;
 
 domains = new Array()
@@ -17,6 +15,8 @@ batch_domain_n = 0
 batch_domain_wallet_to_use = ""
 batch_domain_cancel = false;
 batch_domain_process = ""
+batch_id_value = 0
+batch_id = 0
 batch_is_active = false;
 batch_price = 0;
 
@@ -25,11 +25,13 @@ all_domains_curent_domain = 0
 all_domains_n = 0;
 all_domain_pattern = ""
 all_domains_cancel = false;
+all_domains_csv = "";
+all_domain_to_csv = false;
 only_mine = false
 only_expired = false
 only_for_sale = false
 
-BATCH_PROCESS_TIMEOUT = 15000;
+BATCH_PROCESS_TIMEOUT = 1500;
 ALL_DOMAINS_TIMEOUT = 200;
 ALL_DOMAINS_SEARCH_PORTION = 112;
 
@@ -175,12 +177,28 @@ function processBatch()
                             from : d.owner,
                             value: 0
                         };
+                
                 contract.changeDomain.sendTransaction( domain, 2000000, batch_price, d.transfer, params );
                 break;
+            case "id":            
+                res = contract.getDomain( domain );
+
+                d = new DomainRecord( domain, res[0], res[1], res[2], res[3] );
+                
+                params = {
+                            gas: 200000,
+                            from : d.owner,
+                            value: 0
+                        };
+                getContract().changeId.sendTransaction
+                (
+                    domain, 
+                    batch_id, 
+                    batch_id_value, 
+                    params 
+                );                
+                break;
         }
-
-
-
     }
     catch( err )
     {
@@ -282,8 +300,9 @@ $().ready( function(e){
     });
     
 
-    $("#btn_all_refresh").click( function() { refreshAllDomains(); } );
+    $("#btn_all_refresh").click( function() { refreshAllDomains( false ); } );
     $("#btn_all_cancel").click( function() { all_domains_cancel = true; } );
+    $("#btn_download_all").click( function() { refreshAllDomains( true ); } ); 
     
     
     $("#btn_batch_prolong").click( function() { 
@@ -397,6 +416,92 @@ $().ready( function(e){
         );        
         
     });
+
+    $("#btn_batch_id").click( function() { 
+        batch_domain_list = []
+        
+        list = $("#batch_list").val();
+        res = list.split(/[\s\,;\t\"\']+/);
+        
+        for( var i = 0; i < res.length; i++ )
+        {
+            n = res[i].trim();
+            if( n == "" ) continue;
+            
+            batch_domain_list.push( n );
+            
+        }
+        
+        if( batch_domain_list.length == 0 ) {
+            swal("List Error!", "Cannot recognize any valid names in the list", "error" ) 
+            return;
+        }
+        
+        iv = $("#batch_id").val()
+        batch_id = ""
+        if( iv.substring( 0, 2 ) === "0x" ) 
+        {    
+            a = hexToArray( iv )
+            batch_id = arrayToHex( a )    
+            batch_id = "0x" + batch_id.substr( 0, 64 )
+        }
+        else
+        {
+            utf = utf8.encode( iv ).slice(0, 32);
+            batch_id = "0x" + asciiToHex( utf )    
+        }        
+        
+        iv = $("#batch_value").val()
+        batch_id_value = ""
+        if( iv.substring( 0, 2 ) === "0x" ) 
+        {    
+            a = hexToArray( iv )
+            batch_id_value = arrayToHex( a )    
+            batch_id_value = "0x" + batch_id_value.substr( 0, 64 )
+        }
+        else
+        {
+            utf = utf8.encode( iv ).slice(0, 32);
+            batch_id_value = "0x" + asciiToHex( utf )    
+        } 
+        
+        if( new BigNumber( batch_id ) == 0 || new BigNumber( batch_id_value ) == 0 )
+        {
+            swal("Error!", "ID and value should not be empty", "error" ) 
+            return;            
+        }
+
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to change id " + batch_id + " for " + batch_domain_list.length +  
+                    " domains to " + formatEther( batch_price, "ETH") + "."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, change ID!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                if( isConfirm )
+                {
+                    batch_progress.setText( "");
+                    batch_progress.animate( 0 );
+                    batch_domain_n = 0;
+                    batch_domain_process = "id";
+                    $("#batch_title").text( "ID changing in progress...")
+
+                    $('#btn_batch_claim').prop('disabled',true );                
+                    $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_prolong').prop('disabled',true );                
+                    $('#btn_batch_domain_cancel').prop('disabled',false );                
+                    batch_domain_cancel = false;
+                    batch_is_active = true;
+
+                    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                }
+            }
+        );        
+        
+    });
     
     
     $("#btn_download_ascii").click( function() { 
@@ -437,69 +542,6 @@ $().ready( function(e){
         document.body.removeChild(downloadLink);        
     });
         
-    $("#btn_download_all").click( function() { 
-        
-        swal({   
-            title: "Are you sure?",   
-            text: "Listing all the registered domains is a long operation. It will takes several minutes."  ,   
-            type: "warning",   
-            showCancelButton: true,   
-            confirmButtonText: "Yes, start!",
-            closeOnConfirm: true,    
-            },
-            function(isConfirm){   
-                if( isConfirm )
-                {
-                    var csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
-
-                    try
-                    {
-                        var nn = contract.root_domain();
-
-                        while( new BigNumber( nn ) != 0 ) 
-                        {
-                            res = contract.getDomain( nn );
-
-                            d = new DomainRecord( nn, res[0], res[1], res[2], res[3] );
-                            nn = res[4];
-
-
-                            csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
-                            csv += d.name_hex() + ",";
-                            csv += d.owner + ",";
-                            csv += web3.fromWei( d.price, "ether" ) + ",";
-                            csv += d.expires + ",";
-                            csv += d.days() + ",";
-                            csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
-                            csv += d.stat() + "\n";
-                        }
-                    }
-                    catch( x )
-                    {
-                        hex = web3.toHex( all_domains_curent_domain );
-                        swal("Web3 Error!", "Problem with domain: " + hex + " (" + x + ")", "error" ) 
-
-                        $("#all_domain_progress").hide();
-                        $('#btn_all_refresh').prop('disabled', false );  
-
-                        return;
-                    }
-
-                    var downloadLink = document.createElement("a");
-                    var blob = new Blob([ csv ] );
-                    var url = URL.createObjectURL(blob);
-                    downloadLink.href = url;
-                    downloadLink.target = "all.csv";
-                    downloadLink.download = "all.csv";
-
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);        
-                }
-            }
-        );        
-    });
-    
         
     $("#btn_batch_claim").click( function() { 
         
@@ -710,7 +752,6 @@ $().ready( function(e){
                                     value: 0
                                 };
 
-                        //tx = web3.eth.sendTransaction( params );
                         contract.changeDomain.sendTransaction( current_domain, expires, 0, 0, params );
 
                     }
@@ -756,8 +797,8 @@ $().ready( function(e){
         
         swal({   
             title: "Are you sure?",   
-            text: "You are about to buy the domain (" + current_domain.domain + 
-                    " ) for " + formatEther( current_domain.price, "ETH") + ". Your ownership will expire in " + expires + " blocks."  ,   
+            text: "You are about to buy the domain (" + web3.toHex( current_domain ) + 
+                    " ) for " + formatEther( domain.price, "ETH") + ". Your ownership will expire in " + expires + " blocks."  ,   
             type: "warning",   
             showCancelButton: true,   
             confirmButtonText: "Yes, buy!",
@@ -769,27 +810,22 @@ $().ready( function(e){
                     try 
                     {
                         wallet_to_use = $("#act_buy_my_address").val()       
-
                         Cookies.set('etherid_last_used_address', wallet_to_use ); 
-
-                        gp = web3.eth.gasPrice;
 
                         var params = {
                                     gas: 200000,
-                                    gasPrice : gp,
                                     from : wallet_to_use,
-                                    to: ETHERID_CONTRACT,
-                                    value: current_domain.price,
-                                    data: makeData( [
-                                        "domain",
-                                        new BigNumber( current_domain.domain ),
-                                        expires,
-                                        0,
-                                        0 
-                                    ] )
+                                    value: domain.price 
                                 };
 
-                        tx = web3.eth.sendTransaction( params );
+                        getContract().changeDomain.sendTransaction
+                        (
+                            current_domain, 
+                            expires, 
+                            0, 
+                            0, 
+                            params 
+                        );                            
                     }
                     catch( err )
                     {
@@ -838,8 +874,6 @@ $().ready( function(e){
                                     from : wallet_to_use,
                                     value: 0
                                 };
-
-                        //tx = web3.eth.sendTransaction( params );
 
                         getContract().changeDomain.sendTransaction
                         (
@@ -901,8 +935,6 @@ $().ready( function(e){
                                     from : wallet_to_use,
                                     value: 0
                                 };
-
-                        //tx = web3.eth.sendTransaction( params );
 
                         getContract().changeDomain.sendTransaction
                         (
@@ -1645,7 +1677,6 @@ function DomainRecord ( domain, owner, expires, price, transfer ) {
 
 };
 
-
 function refreshAllDomainsPortion() {
     var this_portion_n = 0;
 
@@ -1655,6 +1686,8 @@ function refreshAllDomainsPortion() {
         
         while( new BigNumber( all_domains_curent_domain ) != 0 ) 
         {
+            if( all_domains_cancel ) break;
+            
             res = contract.getDomain( all_domains_curent_domain );
         
             d = new DomainRecord( all_domains_curent_domain, res[0], res[1], res[2], res[3] );
@@ -1706,7 +1739,24 @@ function refreshAllDomainsPortion() {
                 }
             }
             
-            if( ok ) all_domains_data.push( d ); 
+            if( ok ) 
+            {
+                if( all_domain_to_csv )
+                {
+                    all_domains_csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
+                    all_domains_csv += d.name_hex() + ",";
+                    all_domains_csv += d.owner + ",";
+                    all_domains_csv += web3.fromWei( d.price, "ether" ) + ",";
+                    all_domains_csv += d.expires + ",";
+                    all_domains_csv += d.days() + ",";
+                    all_domains_csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
+                    all_domains_csv += d.stat() + "\n";                        
+                }
+                else
+                {
+                    all_domains_data.push( d ); 
+                }
+            }
             
         }
     }
@@ -1717,51 +1767,69 @@ function refreshAllDomainsPortion() {
         
         $("#all_domain_progress").hide();
         $('#btn_all_refresh').prop('disabled', false );  
+        $('#btn_download_all').prop('disabled', false );  
         
         return;
     }
     
     update_list_progress.set( 1 ); 
+    
+    
+    if( all_domain_to_csv )
+    {
+        var downloadLink = document.createElement("a");
+        var blob = new Blob([ all_domains_csv ] );
+        var url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.target = "all.csv";
+        downloadLink.download = "all.csv";
 
-    //if( all_domains_table ) all_domains_table.destroy();
-    
-    all_domains_table = $('#all_domains').DataTable( {
-        destroy: true,
-        data : all_domains_data,
-        columns: [
-            { data: 'name', title: 'Name' },
-            { data: 'name_hex', title: 'Name(HEX)' },
-            { data: 'owner', title: "Owner" },
-            { data: 'expires', title: "Expires" },
-            { data: 'days', title: "Days Left" },
-            { data: 'price_fine' },
-            { data: 'stat', title: "Status" },
-        ],
-        select: {
-            style:    'os',
-            selector: 'td:first-child',
-            blurable: true
-        }
-    } );        
-    
-    
-    $('#all_domains tbody').on('click', 'tr', function () {
-        var data = all_domains_table.row( this ).data();
-        
-        current_domain = data.domain;
-        updateDomainPage();
-        $("#tabs").tabs("option", "active", 1);
-        
-    } );
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);    
+        all_domains_csv = "";
+    }
+    else
+    {
+        all_domains_table = $('#all_domains').DataTable( {
+            destroy: true,
+            data : all_domains_data,
+            columns: [
+                { data: 'name', title: 'Name' },
+                { data: 'name_hex', title: 'Name(HEX)' },
+                { data: 'owner', title: "Owner" },
+                { data: 'expires', title: "Expires" },
+                { data: 'days', title: "Days Left" },
+                { data: 'price_fine' },
+                { data: 'stat', title: "Status" },
+            ],
+            select: {
+                style:    'os',
+                selector: 'td:first-child',
+                blurable: true
+            }
+        } );        
+
+
+        $('#all_domains tbody').on('click', 'tr', function () {
+            var data = all_domains_table.row( this ).data();
+
+            current_domain = data.domain;
+            updateDomainPage();
+            $("#tabs").tabs("option", "active", 1);
+
+        } );
+    }
     
     $('#btn_all_refresh').prop('disabled', false );  
-    $('#btn_download_ascii').prop('disabled', all_domains_data == 0 );  
-    $('#btn_download_hex').prop('disabled', all_domains_data == 0 );  
+    $('#btn_download_all').prop('disabled', false );  
+    $('#btn_download_ascii').prop('disabled', all_domains_data.length == 0 );  
+    $('#btn_download_hex').prop('disabled', all_domains_data.length == 0 );  
     $("#all_domain_progress").hide();
     
 }
 
-function refreshAllDomains()
+function refreshAllDomains( to_csv )
 {
     all_domains_cancel = false;
     
@@ -1775,6 +1843,9 @@ function refreshAllDomains()
         
         all_domains_data = []
         all_domains_n = 0;
+        all_domain_to_csv = to_csv;
+        all_domains_csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
+
 
         only_mine = $('#only_mine').is(":checked")
         only_expired = $('#only_expired').is(":checked")
@@ -1786,7 +1857,7 @@ function refreshAllDomains()
 
         $("#all_domain_progress").show();
         update_list_progress.set( 0 ); 
-        update_list_progress.setText( "...Updating");
+        update_list_progress.setText( all_domain_to_csv ? "...Downloading" : "...Updating");
     }
     catch( x )
     {
@@ -1795,6 +1866,7 @@ function refreshAllDomains()
     }
     
     $('#btn_all_refresh').prop('disabled', true );  
+    $('#btn_download_all').prop('disabled', true );  
     setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
     
 }

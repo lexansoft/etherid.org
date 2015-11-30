@@ -55,7 +55,8 @@
       
         <ul>
             <li>
-                You can register a Domain name for your Ethereum account for some period of time. The maximum time is 2,000,000 Ehtereum blocks ( about a year ) The domain name is in fact a binary 32 byte value. It can be interpreted as UTF8 representaion of symbolic name.
+                You can register a Domain name for your Ethereum account for some period of time. The maximum time is 2,000,000 Ehtereum blocks ( about a year ) The domain name is in fact a binary 32 byte value. It can be interpreted as UTF8 encoded string.<br>
+                This is the solution for the name erosion problem. If you register a domain name and lost your private key, the name will not be lost for everyone forever.
             </li>
             <li>
                 While you own a domain you can prolong the ownershp.
@@ -74,6 +75,8 @@
             </li>
         </ul>  
     </p>
+    
+    <p>EtherId contract address: 0x3589d05a1ec4af9f65b0e5554e645707775ee43c</p>
     
     <p>You need to install one of the official Ethereum clients <a href="https://www.ethereum.org/cli">official Ethereum clients</a>
     </p>
@@ -235,8 +238,9 @@
                       <input type="checkbox" id="only_mine" checked >Only My Domains 
                       <input type="checkbox" id="only_expired" >Only Expired 
                       <input type="checkbox" id="only_for_sale" >Only For Sale
-                        <br><br>
-                      <button id="btn_all_refresh">Update List</button>
+                      <br><br>
+                      <button id="btn_all_refresh">Update List (<= 5000 records )</button>
+                      <button id="btn_download_all">Download.csv</button>
                   </td>
                   <td  style="text-align: center" width="125">
                       <div id="all_domain_progress" style="display:none">
@@ -251,7 +255,6 @@
       <div style="text-align:right;margin-bottom:1em;">
            <button id="btn_download_ascii" disabled>names.csv</button>
            <button id="btn_download_hex" disabled >hex.csv</button>
-           <button id="btn_download_all">all.csv</button>
       </div>
       
       <table  class="hover" cellspacing="0" width="100%" id="all_domains">
@@ -272,7 +275,7 @@
     <tr>
         <td>
         List of Domains:<br>
-        <textarea cols="30" rows="40" id="batch_list"></textarea>      
+        <textarea cols="30" rows="54" id="batch_list"></textarea>      
         </td>
         <td>
             <div id="batch_claim_controls" class="batch_control_group">
@@ -308,6 +311,16 @@
                 <BR>
                 <button id="btn_batch_price">Set Price</button>
             </div>
+            <div id="batch_id_controls" class="batch_control_group">
+                <h1>Batch Changing ID</h1>
+                  
+                <div style="text-align:right; padding-right:5em;">
+                    ID <input size="24" id="batch_id" value=""></input><br>
+                    Value <input size="24" id="batch_value" value=""></input><br>
+                </div>
+                <BR>
+                <button id="btn_batch_id">Change ID</button>
+            </div>
 
         </td>
         <td>
@@ -332,8 +345,8 @@
     
 <div id="footer">
     
-<a href="https://twitter.com/alexna" target="_blank" class="twitter">
-    <img src="images/twittericon.png" style="vertical-align:middle"> Alexandre Naverniouk 
+<a href="https://www.facebook.com/alexandre.naverniouk" target="_blank" class="twitter">
+    <img src="images/fb.jpeg" style="vertical-align:middle"> Alexandre Naverniouk 
 </a>
     
 </div>
