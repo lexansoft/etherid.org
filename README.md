@@ -3,7 +3,7 @@
 Ethereum ID Registar
 ====================
 
-There are several Ethereum Name registars proposed/implemented. All of them are not what I expect the proper Name Registar should be.  
+There are several Ethereum Name registars proposed/implemented. All of them are not what I expect the proper Name Registrar should be.  
 
 EtherId
 =======
