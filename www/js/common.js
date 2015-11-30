@@ -34,6 +34,7 @@ only_for_sale = false
 BATCH_PROCESS_TIMEOUT = 1500;
 ALL_DOMAINS_TIMEOUT = 200;
 ALL_DOMAINS_SEARCH_PORTION = 112;
+MAX_ITEMS_IN_TABLE = 5000;
 
 var all_domains_table
 var all_domains_data = new Array();
@@ -1755,6 +1756,7 @@ function refreshAllDomainsPortion() {
                 else
                 {
                     all_domains_data.push( d ); 
+                    if( all_domains_data.length >= MAX_ITEMS_IN_TABLE ) break;
                 }
             }
             
