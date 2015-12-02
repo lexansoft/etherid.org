@@ -4,7 +4,12 @@ body {
     font-family: Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
 }
 
-#59869b: #59869b;
+a {  text-decoration: underline ; }
+a:link { color:  #59869b; ; }
+a:visited { color:  #59869b; ; }
+a:hover { color: black;}
+a:active { color:  #59869b; ; }
+
 
 .wrapper {
     width: 100%;

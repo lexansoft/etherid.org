@@ -40,7 +40,9 @@ var all_domains_table
 var all_domains_data = new Array();
 my_accounts = [];
 
-web3 = require('web3');
+
+//if(typeof web3 === 'undefined')
+//    web3 = require('web3');
 
 ETH1 = new BigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
@@ -247,18 +249,20 @@ $().ready( function(e){
         strokeWidth: 2
     });
 
-    
     try
     {
-        web3.setProvider( new web3.providers.HttpProvider( ) );    
+        if(typeof web3.currentProvider === 'undefined')
+            web3.setProvider( new web3.providers.HttpProvider( ) );    
+        
+//        if(typeof web3 === 'undefined')
+//            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); //8545 8080         
+        
         contract = getContract();        
         $("#stat_domains").text( contract.n_domains() );
 //        root_domain = web3.toHex( contract.root_domain() );
 //        alert( root_domain )
     }
     catch( x ) { }
-    
-    
     
     $( "#tabs" ).tabs(
         {
@@ -643,6 +647,7 @@ $().ready( function(e){
     
     
     $("#btn_search_domain").click( function() {
+        
         s = $("input#search_domain").val().trim();
         
         if( s == "" ) return;
