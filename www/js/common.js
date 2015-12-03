@@ -234,36 +234,6 @@ function processBatch()
 
 
 $().ready( function(e){ 
-    
-    batch_progress = new ProgressBar.Circle('#batch_progress', {
-        color: '#59869b',
-        duration: 500,
-        easing: 'easeInOut',
-        strokeWidth: 2
-    });
-
-    update_list_progress = new ProgressBar.Circle('#update_list_progress', {
-        color: '#59869b',
-        duration: 500,
-        easing: 'easeInOut',
-        strokeWidth: 2
-    });
-
-    try
-    {
-        if( web3.currentProvider == null )
-            web3.setProvider( new web3.providers.HttpProvider( ) );    
-        
-//        if(typeof web3 === 'undefined')
-//            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); //8545 8080         
-        
-        contract = getContract();        
-        $("#stat_domains").text( contract.n_domains() );
-//        root_domain = web3.toHex( contract.root_domain() );
-//        alert( root_domain )
-    }
-    catch( x ) { }
-    
     $( "#tabs" ).tabs(
         {
             beforeActivate: function( event, ui ) 
@@ -299,6 +269,37 @@ $().ready( function(e){
         }
     );    
     
+    
+    batch_progress = new ProgressBar.Circle('#batch_progress', {
+        color: '#59869b',
+        duration: 500,
+        easing: 'easeInOut',
+        strokeWidth: 2
+    });
+
+    update_list_progress = new ProgressBar.Circle('#update_list_progress', {
+        color: '#59869b',
+        duration: 500,
+        easing: 'easeInOut',
+        strokeWidth: 2
+    });
+
+    try
+    {
+        if( web3.currentProvider == null )
+            web3.setProvider( new web3.providers.HttpProvider( ) );    
+        
+//        if(typeof web3 === 'undefined')
+//            web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); //8545 8080         
+        
+        contract = getContract();        
+        $("#stat_domains").text( contract.n_domains() );
+//        root_domain = web3.toHex( contract.root_domain() );
+//        alert( root_domain )
+    }
+    catch( x ) {
+        x = x;
+    }
     
     $("input#search_domain").keyup(function( event ) {
         if( event.keyCode == 13 ) $("#btn_search_domain").click()
