@@ -41,8 +41,8 @@ var all_domains_data = new Array();
 my_accounts = [];
 
 
-//if(typeof web3 === 'undefined')
-//    web3 = require('web3');
+if(typeof web3 === 'undefined')
+    web3 = require('web3');
 
 ETH1 = new BigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
@@ -251,7 +251,7 @@ $().ready( function(e){
 
     try
     {
-        if(typeof web3.currentProvider === 'undefined')
+        if( web3.currentProvider == null )
             web3.setProvider( new web3.providers.HttpProvider( ) );    
         
 //        if(typeof web3 === 'undefined')
@@ -1280,6 +1280,7 @@ function  updateDomainPage()
 
         status = "Unknown"
 
+        if( !available ) status = "Owned"
         if( on_sale ) status = "On Sale"
         if( available ) status = "Available"
         if( expired ) status = "Expired"
@@ -1324,9 +1325,9 @@ function  updateDomainPage()
                     ( 
                         $("<td>")
                         .append( $("<button>").attr( "id", id_hex).text( "Edit" )
-                                .attr( "onclick", "editId()"))
+                                .attr( "onclick", "editId()").prop('disabled', !mine ) )
                         .append( $("<button>").attr( "id", id_hex).text( "Delete" )
-                                .attr( "onclick", "deleteId()"))
+                                .attr( "onclick", "deleteId()").prop('disabled', !mine ) )
                     )
             );         
             
