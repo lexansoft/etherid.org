@@ -24,7 +24,7 @@ You can register as many as you want ID's for your domain (name:value pairs).
 
 If you want to sell your domain, put a price on it. Once the price is set, anyone can pay and take the ownership. No communication with you is needed.
 
-If you want to transfer the domin to someone, you simply specify the new address in the Transfer field. The owner of that address, and only him, can then pay the price and claim the domain.
+If you want to transfer the domain to someone, you simply specify the new address in the Transfer field. The owner of that address, and only him, can then pay the price and claim the domain.
 
 EtherId contract address: 0x3589d05a1ec4af9f65b0e5554e645707775ee43c
 
