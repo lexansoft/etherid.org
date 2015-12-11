@@ -523,6 +523,7 @@ $().ready( function(e){
         var url = URL.createObjectURL(blob);
         downloadLink.href = url;
         downloadLink.target = "names.csv";
+        downloadLink.download = "names.csv";        
 
         document.body.appendChild(downloadLink);
         downloadLink.click();
@@ -542,6 +543,7 @@ $().ready( function(e){
         var url = URL.createObjectURL(blob);
         downloadLink.href = url;
         downloadLink.target = "hex.csv";
+        downloadLink.download = "hex.csv";        
 
         document.body.appendChild(downloadLink);
         downloadLink.click();
