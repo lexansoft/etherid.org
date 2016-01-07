@@ -40,6 +40,8 @@ var all_domains_table
 var all_domains_data = new Array();
 my_accounts = [];
 
+HEXRE = /0x[0-9A-Fa-f]+$/
+
 
 if(typeof web3 === 'undefined')
     web3 = require('web3');
@@ -658,7 +660,7 @@ $().ready( function(e){
         hex = ""
         ascii = ""
 
-        if( s.substring( 0, 2 ) === "0x" ) 
+        if( HEXRE.test(s) ) 
         {    
             a = hexToArray( s )
             hex = arrayToHex( a )    
@@ -1054,7 +1056,7 @@ $().ready( function(e){
             }      
             
             current_id = ""
-            if( inputValue.substring( 0, 2 ) === "0x" ) 
+            if( HEXRE.test(inputValue) ) 
             {    
                 a = hexToArray( inputValue )
                 current_id = arrayToHex( a )    
@@ -1086,7 +1088,7 @@ $().ready( function(e){
                 }      
 
                 current_value = ""
-                if( inputValue.substring( 0, 2 ) === "0x" ) 
+                if( HEXRE.test( inputValue ) ) 
                 {    
                     a = hexToArray( inputValue )
                     current_value = arrayToHex( a )    
@@ -1367,7 +1369,7 @@ function editId( ) {
         }      
 
         current_value = ""
-        if( inputValue.substring( 0, 2 ) === "0x" ) 
+        if( HEXRE.test( inputValue ) ) 
         {    
             a = hexToArray( inputValue )
             current_value = arrayToHex( a )    
