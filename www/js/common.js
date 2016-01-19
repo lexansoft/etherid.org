@@ -40,11 +40,17 @@ var all_domains_table
 var all_domains_data = new Array();
 my_accounts = [];
 
-HEXRE = /0x[0-9A-Fa-f]+$/
+HEXRE = /^0x[0-9A-Fa-f]+$/
+SHA256RE = /^Qm[1-9A-Za-z]{44}$/            
 
 
 if(typeof web3 === 'undefined')
     web3 = require('web3');
+
+
+var bs58 = require( 'bs58')
+var MH = require('multihashes')
+var Buffer = require( 'Buffer')
 
 ETH1 = new BigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
@@ -1062,7 +1068,7 @@ $().ready( function(e){
                 current_id = arrayToHex( a )    
                 current_id = "0x" + current_id.substr( 0, 64 )
             }
-            else
+            else 
             {
                 utf = utf8.encode( inputValue ).slice(0, 32);
                 current_id = "0x" + asciiToHex( utf )    
@@ -1093,6 +1099,27 @@ $().ready( function(e){
                     a = hexToArray( inputValue )
                     current_value = arrayToHex( a )    
                     current_value = "0x" + current_value.substr( 0, 64 )
+                }
+                else if( SHA256RE.test( inputValue ) ) 
+                {
+                    //inputValue = inputValue.substr( 2 ) //remoove Qm
+                    try
+                    {
+
+                        var out = bs58.decode( inputValue )
+
+                        ar = MH.decode( new Buffer( out ) )
+
+                        if ( ar.length != 32 ) throw "HASH code should be 32 bytes long"
+                        if ( ar.code != 0x12 ) throw "Only sha2-256 hashes are excepted"
+
+                        current_value =  "0x" + arrayToHex( ar.digest )
+                    }
+                    catch( x )
+                    {
+                        swal.showInputError( x );
+                        return false;        
+                    }
                 }
                 else
                 {
@@ -1375,6 +1402,27 @@ function editId( ) {
             current_value = arrayToHex( a )    
             current_value = "0x" + current_value.substr( 0, 64 )
         }
+        else if( SHA256RE.test( inputValue ) ) 
+            {
+                //inputValue = inputValue.substr( 2 ) //remoove Qm
+                try
+                {
+                    
+                    var out = bs58.decode( inputValue )
+                    
+                    ar = MH.decode( new Buffer( out ) )
+                    
+                    if ( ar.length != 32 ) throw "HASH code should be 32 bytes long"
+                    if ( ar.code != 0x12 ) throw "Only sha2-256 hashes are excepted"
+                    
+                    current_value =  "0x" + arrayToHex( ar.digest )
+                }
+                catch( x )
+                {
+                    swal.showInputError( x );
+                    return false;        
+                }
+            }
         else
         {
             utf = utf8.encode( inputValue ).slice(0, 32);
