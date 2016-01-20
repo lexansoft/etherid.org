@@ -51,6 +51,7 @@ if(typeof web3 === 'undefined')
 var bs58 = require( 'bs58')
 var MH = require('multihashes')
 var Buffer = require( 'Buffer')
+var utf8 = require('utf8');
 
 ETH1 = new BigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
