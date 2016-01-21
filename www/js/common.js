@@ -1273,6 +1273,21 @@ function  updateDomainPage()
         $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
         $("#domain_transfer").text( new BigNumber( domain.transfer ) == 0 ? "" : domain.transfer );
 
+
+        ipfs_url = ""
+        ipfs_value = contract.getId( current_domain, "0x" + asciiToHex( utf8.encode( "ipfs" ) ) )             
+        if( ipfs_value != 0 ) {
+            h = web3.toHex( ipfs_value[0] )
+            a = hexToArray( h )
+            
+            while( a.length < 32 ) { a = a.splice( 0, 1, 0) } //make it 32 for sure
+            mh =  MH.encode( new Buffer( a ), 18, 32 ) 
+            ipfs_url = bs58.encode( mh )
+        }
+        $("#ipfs_url").text( ipfs_url );
+        $("#ipfs_url").attr( "href", "http://localhost:8080/ipfs/" + ipfs_url );
+
+
         var my_accounts = []
         my_accounts = web3.eth.accounts;
     
@@ -1301,7 +1316,8 @@ function  updateDomainPage()
                 forme = true; break; 
             }
         }
-
+        
+        
         $('#btn_act_claim').prop('disabled', !( expired || available ) );
         $('#btn_act_buy').prop('disabled', !( !mine && ( on_sale || forme ) ) );
     //    $('#btn_act_buy').prop('disabled', false ); //DEBUG ONLY
