@@ -1276,11 +1276,11 @@ function  updateDomainPage()
 
         ipfs_url = ""
         ipfs_value = contract.getId( current_domain, "0x" + asciiToHex( utf8.encode( "ipfs" ) ) )             
-        if( ipfs_value != 0 ) {
+        if( ipfs_value[0] != 0 ) {
             h = web3.toHex( ipfs_value[0] )
             a = hexToArray( h )
             
-            while( a.length < 32 ) { a = a.splice( 0, 1, 0) } //make it 32 for sure
+            while( a.length < 32 ) { a.unshift(0) }// = a.splice( 0, 1, 0) } //make it 32 for sure
             mh =  MH.encode( new Buffer( a ), 18, 32 ) 
             ipfs_url = bs58.encode( mh )
         }
