@@ -2,6 +2,72 @@
 
 <head>
     <title>The EtherID-IPFS demo website</title>
+    
+<script src="js/web3.min.js"></script>     
+<script src="js/etherid.min.js"></script>      
+    
+    
+<script>
+
+    window.onload = function() {
+        
+        HASHRE = /Qm[0-9A-Za-z]+/
+        
+        var hasha = HASHRE.exec( window.location );
+        
+        if( hasha )
+        {
+            hash = hasha[0]
+            
+            document.getElementById( "url_hash" ).innerHTML = 
+                "This page URL has this ipfs HASH: <b>" + hash + "<b>"
+        }
+        else
+        {
+            document.getElementById( "url_hash" ).innerHTML = 
+                "This page was not open through IPFS"
+        }
+            
+        try {
+
+            /* first of all set up the web3 object. THis should work in Mist as well */
+            if(typeof web3 === 'undefined')
+                web3 = require('web3');     
+
+            if( web3.currentProvider == null )
+                web3.setProvider( new web3.providers.HttpProvider( ) );                
+
+            /* Get the EtherID API object */
+            EID = require( "etherid" )
+
+            BCH_HASH = EID.getHash( web3, "test", "ipfs" )
+            
+            document.getElementById( "bch_hash" ).innerHTML = 
+                "The proper hash for the page sould be: <b>" + BCH_HASH + "<b>"            
+            
+            if( hash == BCH_HASH )
+            {
+                document.getElementById( "action" ).innerHTML = 
+                    "You see the CORRECT version of this website!" 
+                document.getElementById( "action" ).style.color = "green"
+            }
+            else
+            {
+                document.getElementById( "action" ).innerHTML = 
+                    "You see the WRONG version of this website! " +
+                    "Please load the proper version here: <b>" + 
+                    "<a href='/ipfs/" + BCH_HASH + "/index.html'>" + BCH_HASH + "</a>" 
+                document.getElementById( "action" ).style.color = "red"
+            }
+        } catch( x ) { 
+            document.getElementById( "error" ).innerHTML = 
+                "ERROR: " + x 
+        }
+     
+    }
+    
+    
+</script>     
 </head>
     
     
@@ -14,8 +80,10 @@
     <p>If you navigated to this page from the <a href="http://etherid.org">EtherID.org</a> "test" domain page, congratulations! Welcome to 
     the new distributed Web! The integrity of this site is cryptographicaly proven, the acceess to the content is unstoppable, and censorship resisant. </p>
     
-    <P>
-    </P>
+    <P id="url_hash"></P>
+    <P id="bch_hash"></P>
+    <P id="action"></P>
+    <P style="color:red" id="error"></P>
     
     
 </body>
