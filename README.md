@@ -32,6 +32,12 @@ You need to install one of the official Ethereum clients official Ethereum clien
 
 EtherID is an open source project. The code is available from https://github.com/lexansoft/EtherID.org
 
+### etherid-js
+The NodeJS module doe reading the EtherID contract is available here:
+
+[etherid-js](https://github.com/lexansoft/etherid-js)
+
+
 
 Author: Alexandre Naverniouk
 
