@@ -23,10 +23,11 @@ batch_price = 0;
 all_domains_data = []
 all_domains_curent_domain = 0
 all_domains_n = 0;
-all_domain_pattern = ""
+all_domains_pattern = ""
 all_domains_cancel = false;
 all_domains_csv = "";
-all_domain_to_csv = false;
+all_domains_to_csv = false;
+all_domains_0_passed = false
 only_mine = false
 only_expired = false
 only_for_sale = false
@@ -1075,6 +1076,11 @@ $().ready( function(e){
                 current_id = "0x" + asciiToHex( utf )    
             }
             
+            if( new BigNumber( current_id ) == 0 ) {
+                swal.showInputError("ID name cannot be zero!");     
+                return false   
+            }
+            
             swal(
             {   
                 title: "ID Value",   
@@ -1761,17 +1767,19 @@ function refreshAllDomainsPortion() {
     {
         var n_domains =  contract.n_domains();
         
-        while( new BigNumber( all_domains_curent_domain ) != 0 ) 
+        while( !all_domains_0_passed || new BigNumber( all_domains_curent_domain ) != 0 ) 
         {
+            if( !all_domains_0_passed && new BigNumber( all_domains_curent_domain ) == 0 ) all_domains_0_passed = true;
+            
             if( all_domains_cancel ) break;
             
             res = contract.getDomain( all_domains_curent_domain );
-        
+
             d = new DomainRecord( all_domains_curent_domain, res[0], res[1], res[2], res[3] );
             all_domains_curent_domain = res[4];
-
+            
             all_domains_n++;
-
+            
             this_portion_n++;
             if( this_portion_n > ALL_DOMAINS_SEARCH_PORTION ) {
                 setTimeout( refreshAllDomainsPortion, ALL_DOMAINS_TIMEOUT);
@@ -1799,12 +1807,12 @@ function refreshAllDomainsPortion() {
             
             var ok = true;
 
-            if( all_domain_pattern != "" ) {
+            if( all_domains_pattern != "" ) {
                 ok = false;
                 
                 hex = web3.toHex( d.domain );
                 
-                if( hex.match( all_domain_pattern ) ) { ok = true }
+                if( hex.match( all_domains_pattern ) ) { ok = true }
                 else
                 {
                     ascii = ""
@@ -1812,13 +1820,13 @@ function refreshAllDomainsPortion() {
                         ascii = utf8.decode( toAscii( hex ) ) 
                     }
                     catch( x ) {}
-                    if( ascii.match( all_domain_pattern ) ) { ok = true }
+                    if( ascii.match( all_domains_pattern ) ) { ok = true }
                 }
             }
             
             if( ok ) 
             {
-                if( all_domain_to_csv )
+                if( all_domains_to_csv )
                 {
                     all_domains_csv += "\"" + d.name().replace( "\'", "\'\'").replace( "\"", "\"\"") + "\",";
                     all_domains_csv += d.name_hex() + ",";
@@ -1853,7 +1861,7 @@ function refreshAllDomainsPortion() {
     update_list_progress.set( 1 ); 
     
     
-    if( all_domain_to_csv )
+    if( all_domains_to_csv )
     {
         var downloadLink = document.createElement("a");
         var blob = new Blob([ all_domains_csv ] );
@@ -1920,22 +1928,23 @@ function refreshAllDomains( to_csv )
         all_domains_curent_domain = contract.root_domain();
         
         all_domains_data = []
+        all_domains_0_passed = false;
         all_domains_n = 0;
-        all_domain_to_csv = to_csv;
+        all_domains_to_csv = to_csv;
         all_domains_csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";
 
 
         only_mine = $('#only_mine').is(":checked")
         only_expired = $('#only_expired').is(":checked")
         only_for_sale = $('#only_for_sale').is(":checked")
-        all_domain_pattern = $("#all_domains_pattern").val();
+        all_domains_pattern = $("#all_domains_pattern").val();
 
         all_domains_curent_domain = contract.root_domain();
         all_domains_n = 0;
 
         $("#all_domain_progress").show();
         update_list_progress.set( 0 ); 
-        update_list_progress.setText( all_domain_to_csv ? "...Downloading" : "...Updating");
+        update_list_progress.setText( all_domains_to_csv ? "...Downloading" : "...Updating");
     }
     catch( x )
     {
