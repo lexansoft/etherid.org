@@ -13,7 +13,7 @@ module.exports = new function() {
     var MH = require('multihashes')
     var bs58 = require( 'bs58')
     
-    this.version = "1.1.0"
+    this.version = "1.1.1"
     
     this.ether_contract = undefined
     
@@ -44,8 +44,8 @@ module.exports = new function() {
         return str;
     } 
     
-    this.getNumberOfDomains = function ( web3 ) {
-        return this.getContract( web3 ).n_domains()
+    this.getNumberOfDomains = function ( web3, callback ) {
+        return this.getContract( web3 ).n_domains( callback )
     }
 
     
@@ -59,7 +59,7 @@ module.exports = new function() {
         }
     }
 
-    this.getDomain = function ( web3, name ) {
+    this.getDomain = function ( web3, name, callback ) {
         
         test = web3.toHex( name )
         
@@ -73,26 +73,54 @@ module.exports = new function() {
             domain = new BigNumber( hex )
         }
         
-        res = this.getContract( web3 ).getDomain( domain );
-        
-        r =  
+        if( !callback ) { // NOT RECOMMENDED !!!
+            res = this.getContract( web3 ).getDomain( domain );
+
+            r =  
+            {
+                domain: domain,
+                owner: res[0],
+                expires: res[1],
+                price: res[2],
+                transfer: res[3],
+                next_domain: res[4],
+                root_id: res[5],
+
+                domainStr: this.toUTF( web3, domain ),
+                domainHex: web3.toHex( domain )
+            }
+
+            return r;
+        } 
+        else
         {
-            domain: domain,
-            owner: res[0],
-            expires: res[1],
-            price: res[2],
-            transfer: res[3],
-            next_domain: res[4],
-            root_id: res[5],
-            
-            domainStr: this.toUTF( web3, domain ),
-            domainHex: web3.toHex( domain )
+            var EtherId = this;
+            this.getContract( web3 ).getDomain( domain, function( error, res ) {
+                
+                if( error ) { callback( error, null ) }
+                else {
+                    r =  
+                    {
+                        domain: domain,
+                        owner: res[0],
+                        expires: res[1],
+                        price: res[2],
+                        transfer: res[3],
+                        next_domain: res[4],
+                        root_id: res[5],
+
+                        domainStr: EtherId.toUTF( web3, domain ),
+                        domainHex: web3.toHex( domain )
+                    }                    
+                    callback( null, r )
+                }
+                
+                
+            });            
         }
-        
-        return r;
     }
 
-    this.getId = function ( web3, d, i ) {
+    this.getId = function ( web3, d, i, callback ) {
         domain = d;
         if( this.isBigNumber( d ) ) { domain = d }
         else if( HEXRE.test( d ) )  { domain = new BigNumber( d ) }
@@ -111,22 +139,61 @@ module.exports = new function() {
             id = new BigNumber( hex )
         }
         
-        res = this.getContract( web3 ).getId( domain, id ) 
+        if( !callback ) { // NOT RECOMMENDED !!!
+            res = this.getContract( web3 ).getId( domain, id ) 
 
-        r =  
-        {
-            name: id,
-            nameStr: this.toUTF( web3, id ),
-            nameHex: web3.toHex( id ),
-            value: res[0],
-            valueInt: res[0].toNumber(),
-            valueHex: web3.toHex( res[0] ),
-            valueStr: this.toUTF( web3, res[0] ),
-            next_id: res[1],
-            prev_id: res[2]
+            h =  web3.toHex( res[0] )
+            a = this.hexToArray( h )
+            while( a.length < 32 ) { a.splice( 0, 0, 0) } //make it 32 for sure
+            mh =  MH.encode( new Buffer( a ), 18, 32 ) 
+            hash = bs58.encode( mh )        
+
+            r =  
+            {
+                name: id,
+                nameStr: this.toUTF( web3, id ),
+                nameHex: web3.toHex( id ),
+                value: res[0],
+                valueInt: res[0].toNumber(),
+                valueHex: h,
+                valueStr: this.toUTF( web3, res[0] ),
+                valueHash: hash,
+                next_id: res[1],
+                prev_id: res[2]
+            }
+
+            return r;
         }
-        
-        return r;
+        else
+        {
+            var EtherId = this;
+            res = this.getContract( web3 ).getId( domain, id, function( error, res ) {
+                if( error ) { callback( error, null ) }
+                else {
+                    h =  web3.toHex( res[0] ) 
+                    a = EtherId.hexToArray( h )
+                    while( a.length < 32 ) { a.splice( 0, 0, 0) } //make it 32 for sure
+                    mh =  MH.encode( new Buffer( a ), 18, 32 ) 
+                    hash = bs58.encode( mh )        
+
+                    r =  
+                    {
+                        name: id,
+                        nameStr: EtherId.toUTF( web3, id ),
+                        nameHex: web3.toHex( id ),
+                        value: res[0],
+                        valueInt: res[0].toNumber(),
+                        valueHex: h,
+                        valueStr: EtherId.toUTF( web3, res[0] ),
+                        valueHash: hash,
+                        next_id: res[1],
+                        prev_id: res[2]
+                    }
+
+                     callback( null, r )
+                }                
+            })
+        }
     }
 
     this.toAscii = function (hex) { //fixed version
@@ -158,26 +225,6 @@ module.exports = new function() {
         }        
 
         return r;
-    }
-    
-    this.getInt = function ( web3, d, i ) {
-        return this.getId( web3, d, i ).valueInt
-    }
-
-    this.getStr = function ( web3, d, i ) {
-        return this.getId( web3, d, i ).valueStr;
-    }
-    
-    this.getHash = function ( web3, d, i ) {
-        var val = this.getId( web3, d, i ).value;
-    
-        h = web3.toHex( val )
-        a = this.hexToArray( h )
-            
-        while( a.length < 32 ) { a = a.splice( 0, 1, 0) } //make it 32 for sure
-        
-        mh =  MH.encode( new Buffer( a ), 18, 32 ) 
-        return bs58.encode( mh )
     }
     
     this.getDomainEnum = function( web3 )

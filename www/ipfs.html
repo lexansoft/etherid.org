@@ -4,8 +4,16 @@
 </head>
 
 <script>
+    
+var USAGE = 
+    "<p>Usage:</p>" +
+    "<p>http://etherid.org/ipfs?{DOMAIN}.{ID}/{PATH}</p>" +
+    "<p>Examples:</p>" +
+    "<p>http://etherid.org/ipfs?test<br>" +
+    "<p>http://etherid.org/ipfs?test.ipfs/index.html<br>" +
+    "<p>http://etherid.org/ipfs?test%2Ecom  (domain: test.com )<p>";
 
-var redirect = function () {
+window.onload = function () {
     try {
     
         var path = location.search.substr( 1 )
@@ -21,36 +29,60 @@ var redirect = function () {
             web3.setProvider( new web3.providers.HttpProvider( ) );    
 
         EID = require( 'etherid-js' )
+
+        hostname = path
+        ipfs_path = ""
         
-        a = path.split('.')
+        i = path.indexOf( '/' )
+        if( i >= 0 )
+        {
+            hostname = path.substr( 0, i )
+            ipfs_path = path.substr( i ) 
+        }
         
-        domain = ""
+        a = hostname.split('.')
+        
+        domain = a[0]
         id = "ipfs"
         
-        if( a.length == 0 ) {
-            document.write( "ERROR: no path specified."  )    
+        if( domain.length == 0 ) {
+            document.write( "ERROR: no domain specified." + USAGE  )    
             return;
         }
         
-        if( a.length == 1 ) { domain = a[0] }
-        else { domain = a[0]; id = a[1] }
+        if( a.length > 1 ) { id = a[1] }
         
+        if( id.length == 0 ) {
+            document.write( "ERROR: empty ID specified." + USAGE )    
+            return;
+        }
+
         domain = decodeURIComponent( domain )
         id = decodeURIComponent( id )
         
-        document.write( "domain: " + domain + " id: " + id + " ")
+        EID.getId( web3, domain, id, function( error, id ) {
+            if( !error )
+            {
+                if( id.valueInt == 0  ) {
+                    document.write( "ERROR: no hash value for ID." + USAGE )    
+                    return;
+                }
+                
+                redirect_url = "http://localhost:8080/ipfs/" + id.valueHash + ipfs_path
+                document.write( "URL: " + redirect_url + "<br>" )
+                document.write( "Redirecting..." + "<br>" )
+                window.location.assign( redirect_url );
+            }
+            else
+            {
+                document.write( "ERROR: " + error + USAGE)
+            }
+        })
         
-        hash = EID.getHash( web3, domain, id )
-        
-        window.location = "http://localhost:8080/ipfs/" + hash;
-        
-        document.write( "hash: " + hash  )
     } catch(x) {
-        document.write( "ERROR: " + x )
+        document.write( "ERROR: " + x  + USAGE)
     }
-}()
-    
-    
+}
     
 </script>
 </html>

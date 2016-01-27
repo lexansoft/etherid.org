@@ -7,36 +7,42 @@
     
 <script>
 
-    window.onload = function() {
+window.onload = function() {
+
+    /* first of all set up the web3 object. THis should work in Mist as well */
+    if(typeof web3 === 'undefined')
+    {
+        Web3 = require('web3');
+        web3 = new Web3();            
+    }
+
+    if( web3.currentProvider == null )
+        web3.setProvider( new web3.providers.HttpProvider( ) );                
+
+    /* Get the EtherID API object */
+    EID = require( "etherid" )
+
+    EID.watch( web3, function( error, result ) {
         
-        /* first of all set up the web3 object. THis should work in Mist as well */
-        if(typeof web3 === 'undefined')
-        {
-            Web3 = require('web3');
-            web3 = new Web3();            
+        EID.getNumberOfDomains( web3, function( error, result ) {
+            document.getElementById( "n_domains" ).innerHTML = result
+        })
+    }) 
+
+    document.getElementById( "version" ).innerHTML = EID.version
+//        document.getElementById( "n_domains" ).innerHTML = EID.getNumberOfDomains( web3 )
+
+    domain = EID.getDomain( web3, "test", function( error, domain ) {
+        if( !error ) {
+            document.getElementById( "expires" ).innerHTML = domain.expires
+            document.getElementById( "owner" ).innerHTML = web3.toHex( domain.owner )
+            document.getElementById( "price" ).innerHTML = domain.price
+            document.getElementById( "transfer" ).innerHTML = web3.toHex( domain.transfer )
+            document.getElementById( "next" ).innerHTML = web3.toHex( domain.next_domain )
+            document.getElementById( "root_id" ).innerHTML = web3.toHex( domain.root_id )
         }
-            
-        if( web3.currentProvider == null )
-            web3.setProvider( new web3.providers.HttpProvider( ) );                
-        
-        /* Get the EtherID API object */
-        EID = require( "etherid" )
-    
-        EID.watch( web3, function( error, result ) {
-            document.getElementById( "n_domains" ).innerHTML = EID.getNumberOfDomains( web3 )
-        }) 
-        
-        document.getElementById( "version" ).innerHTML = EID.version
-        document.getElementById( "n_domains" ).innerHTML = EID.getNumberOfDomains( web3 )
-        
-        domain = EID.getDomain( web3, "test" )
-        document.getElementById( "expires" ).innerHTML = domain.expires
-        document.getElementById( "owner" ).innerHTML = web3.toHex( domain.owner )
-        document.getElementById( "price" ).innerHTML = domain.price
-        document.getElementById( "transfer" ).innerHTML = web3.toHex( domain.transfer )
-        document.getElementById( "next" ).innerHTML = web3.toHex(  domain.next_domain )
-        document.getElementById( "root_id" ).innerHTML = web3.toHex( domain.root_id )
-        
+    });
+
         E = EID.getIdEnum( web3, "test" )
         id = EID.getNextId( web3, E)
         list = []
@@ -44,43 +50,49 @@
         while( id )
         {
             list.push( "'" + id.nameStr + "'" )
-            id = EID.getNextId( web3, E)
+            id = EID.getNextId( web3, E) //synchronious call!!!
         }
         document.getElementById( "id_list" ).innerHTML = list.join( ", ")
-    
-        
 
-        document.getElementById( "test_int" ).innerHTML = EID.getInt( web3, "test", "test_number" )
-        document.getElementById( "test_text" ).innerHTML = EID.getStr( web3, "test", "test_text" )
-        document.getElementById( "test_ipfs" ).innerHTML = EID.getHash( web3, "test", "ipfs" )
-        
-        
+    EID.getId( web3, "test", "test_number", function( error, id ) {
+        if( !error ) 
+            document.getElementById( "test_int" ).innerHTML = id.valueInt
+    });
+
+    EID.getId( web3, "test", "test_text", function( error, id ) {
+        if( !error ) document.getElementById( "test_text" ).innerHTML = id.valueStr
+    });
+
+    EID.getId( web3, "test", "test_ipfs", function( error, id ) {
+        if( !error ) document.getElementById( "test_ipfs" ).innerHTML = id.valueHash
+    });
+
         E = EID.getDomainEnum( web3 )
-    }
+}
 
-    
-    function onListDomainsStart() 
-    {
-        DomainEnumerator = EID.getDomainEnum( web3 )
-        stop_listing = false;
-        ListDomainStep( web3 );
-    }
-    
-    function onListDomainsStop() 
-    {
-        stop_listing = true;
-    }
 
-    function ListDomainStep()
-    {
-        d = EID.getNextDomain( web3, DomainEnumerator )
-        if( !d ) return;
-        
-        document.getElementById( "list_domains" ).innerHTML = "domain #:" + DomainEnumerator.n + " " + d.domainStr
-        
-        if( !stop_listing ) setTimeout( ListDomainStep, 10 )
-    }
-    
+function onListDomainsStart() 
+{
+    DomainEnumerator = EID.getDomainEnum( web3 )
+    stop_listing = false;
+    ListDomainStep( web3 );
+}
+
+function onListDomainsStop() 
+{
+    stop_listing = true;
+}
+
+function ListDomainStep()
+{
+    d = EID.getNextDomain( web3, DomainEnumerator )
+    if( !d ) return;
+
+    document.getElementById( "list_domains" ).innerHTML = "domain #:" + DomainEnumerator.n + " " + d.domainStr
+
+    if( !stop_listing ) setTimeout( ListDomainStep, 10 )
+}
+
     
 </script>    
     
