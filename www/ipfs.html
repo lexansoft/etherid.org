@@ -1,0 +1,56 @@
+<html>
+<head>
+<script src="js/bundle.js"></script>    
+</head>
+
+<script>
+
+var redirect = function () {
+    try {
+    
+        var path = location.search.substr( 1 )
+
+        if(typeof web3 === 'undefined')
+        {
+            Web3 = require('web3');
+            web3 = new Web3();            
+        }
+
+
+        if( web3.currentProvider == null )
+            web3.setProvider( new web3.providers.HttpProvider( ) );    
+
+        EID = require( 'etherid-js' )
+        
+        a = path.split('.')
+        
+        domain = ""
+        id = "ipfs"
+        
+        if( a.length == 0 ) {
+            document.write( "ERROR: no path specified."  )    
+            return;
+        }
+        
+        if( a.length == 1 ) { domain = a[0] }
+        else { domain = a[0]; id = a[1] }
+        
+        domain = decodeURIComponent( domain )
+        id = decodeURIComponent( id )
+        
+        document.write( "domain: " + domain + " id: " + id + " ")
+        
+        hash = EID.getHash( web3, domain, id )
+        
+        window.location = "http://localhost:8080/ipfs/" + hash;
+        
+        document.write( "hash: " + hash  )
+    } catch(x) {
+        document.write( "ERROR: " + x )
+    }
+}()
+    
+    
+    
+</script>
+</html>

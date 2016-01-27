@@ -45,14 +45,27 @@ HEXRE = /^0x[0-9A-Fa-f]+$/
 SHA256RE = /^Qm[1-9A-Za-z]{44}$/            
 
 
+//if(typeof web3 === 'undefined')
+//    web3 = require('web3');
+//
 if(typeof web3 === 'undefined')
-    web3 = require('web3');
+{
+    Web3 = require('web3');
+    web3 = new Web3();            
+}
+
+if( web3.currentProvider == null )
+    web3.setProvider( new web3.providers.HttpProvider( ) );    
 
 
 var bs58 = require( 'bs58')
 var MH = require('multihashes')
 var Buffer = require( 'Buffer')
 var utf8 = require('utf8');
+var BigNumber = require('bignumber.js')
+var Cookies = require('cookies-js')
+var ProgressBar = require('progressbar.js')
+var swal = require('sweetalert')
 
 ETH1 = new BigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
