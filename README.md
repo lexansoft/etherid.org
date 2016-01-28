@@ -26,6 +26,9 @@ If you want to sell your domain, put a price on it. Once the price is set, anyon
 
 If you want to transfer the domain to someone, you simply specify the new address in the Transfer field. The owner of that address, and only him, can then pay the price and claim the domain.
 
+EtherID allows you to store sha256 multihash values as the ID values. Then you can use the
+EtherID/IPFS gateway to get access to the IPFS resources. You can read more [here](https://github.com/lexansoft/etherid.org/wiki/ipfs_gateway)
+
 EtherId contract address: 0x3589d05a1ec4af9f65b0e5554e645707775ee43c
 
 You need to install one of the official Ethereum clients official Ethereum clients
