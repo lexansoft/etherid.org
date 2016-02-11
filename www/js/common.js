@@ -62,12 +62,11 @@ var bs58 = require( 'bs58')
 var MH = require('multihashes')
 var Buffer = require( 'Buffer')
 var utf8 = require('utf8');
-var BigNumber = require('bignumber.js')
 var Cookies = require('cookies-js')
 var ProgressBar = require('progressbar.js')
 var swal = require('sweetalert')
 
-ETH1 = new BigNumber( 1000000000000000000 );   
+ETH1 = web3.toBigNumber( 1000000000000000000 );   
 SECONDS_PER_BLOCK = 12;
 ETH_SIGN = "\u{1D763}"
 
@@ -161,7 +160,7 @@ function processBatch()
         catch( x ) {}
     }    
     
-    domain = new BigNumber( hex );
+    domain = web3.toBigNumber( hex );
     
     batch_progress.setText( ascii );
     
@@ -409,7 +408,7 @@ $().ready( function(e){
         }
         
         price_in_eth = $("#batch_price").val()
-        batch_price = web3.toWei( new BigNumber( price_in_eth ), "ether" );
+        batch_price = web3.toWei( web3.toBigNumber( price_in_eth ), "ether" );
             
 
         swal({   
@@ -494,7 +493,7 @@ $().ready( function(e){
             batch_id_value = "0x" + asciiToHex( utf )    
         } 
         
-        if( new BigNumber( batch_id ) == 0 || new BigNumber( batch_id_value ) == 0 )
+        if( web3.toBigNumber( batch_id ) == 0 || web3.toBigNumber( batch_id_value ) == 0 )
         {
             swal("Error!", "ID and value should not be empty", "error" ) 
             return;            
@@ -704,7 +703,7 @@ $().ready( function(e){
         
         
         hex = remove0Prefix( hex )
-        current_domain = new BigNumber( hex );
+        current_domain = web3.toBigNumber( hex );
 
         updateDomainPage()
         
@@ -750,7 +749,7 @@ $().ready( function(e){
 
     $("#btn_act_claim_domain").click( function() {
         
-        expires = new BigNumber( $("#action_claim #expires").val() )
+        expires = web3.toBigNumber( $("#action_claim #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -821,7 +820,7 @@ $().ready( function(e){
 
     $("#btn_act_buy_domain").click( function() {
         
-        expires = new BigNumber( $("#action_buy #expires").val() )
+        expires = web3.toBigNumber( $("#action_buy #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -879,7 +878,7 @@ $().ready( function(e){
     
     $("#btn_act_prolong_domain").click( function() {
         
-        expires = new BigNumber( $("#action_prolong #expires").val() )
+        expires = web3.toBigNumber( $("#action_prolong #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -937,10 +936,10 @@ $().ready( function(e){
     $("#btn_act_sell_domain").click( function() {
         
         price_in_eth = $("#action_sell #price").val()
-        price = web3.toWei( new BigNumber( price_in_eth ), "ether" );
+        price = web3.toWei( web3.toBigNumber( price_in_eth ), "ether" );
         
         
-        expires = new BigNumber( $("#action_sell #expires").val() )
+        expires = web3.toBigNumber( $("#action_sell #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;
@@ -1004,7 +1003,7 @@ $().ready( function(e){
             transfer = "0x" + transfer;
         }
         
-        expires = new BigNumber( $("#action_transfer #expires").val() )
+        expires = web3.toBigNumber( $("#action_transfer #expires").val() )
         
         if( expires < 1000 ) expires = 1000;
         if( expires > 2000000 ) expires = 2000000;        
@@ -1089,7 +1088,7 @@ $().ready( function(e){
                 current_id = "0x" + asciiToHex( utf )    
             }
             
-            if( new BigNumber( current_id ) == 0 ) {
+            if( web3.toBigNumber( current_id ) == 0 ) {
                 swal.showInputError("ID name cannot be zero!");     
                 return false   
             }
@@ -1204,7 +1203,7 @@ function no0x(a)
 
 function formatEther( v, t )
 {
-    n = new BigNumber( v );
+    n = new web3.toBigNumber( v );
     
     if( t == "ETH" )
     {
@@ -1219,12 +1218,12 @@ function formatEther( v, t )
     }
     
     if( n.e < 3 ) { return n + " wei"; }
-    if( n.e < 6 ) { return n.div( new BigNumber( "1000" ) ) + " Kwei"; }
-    if( n.e < 9 ) { return n.div( new BigNumber( "1000000" ) ) + " Mwei"; }
-    if( n.e < 12 ) { return n.div( new BigNumber( "1000000000" ) ) + " Gwei"; }
-    if( n.e < 15 ) { return n.div( new BigNumber( "1000000000000" ) ) + " szabo"; }
-    if( n.e < 18 ) { return n.div( new BigNumber( "1000000000000000" ) ) + " finney"; }
-    //if( n.e < 21 ) { return n.div( new BigNumber( "1000000000000000000" ) ) + " ether"; }
+    if( n.e < 6 ) { return n.div( web3.toBigNumber( "1000" ) ) + " Kwei"; }
+    if( n.e < 9 ) { return n.div( web3.toBigNumber( "1000000" ) ) + " Mwei"; }
+    if( n.e < 12 ) { return n.div( web3.toBigNumber( "1000000000" ) ) + " Gwei"; }
+    if( n.e < 15 ) { return n.div( web3.toBigNumber( "1000000000000" ) ) + " szabo"; }
+    if( n.e < 18 ) { return n.div( web3.toBigNumber( "1000000000000000" ) ) + " finney"; }
+    //if( n.e < 21 ) { return n.div( web3.toBigNumber( "1000000000000000000" ) ) + " ether"; }
     return n.div( ETH1 ) + " ether"; 
 }
 
@@ -1273,7 +1272,7 @@ function  updateDomainPage()
             root_id: res[5]
         }
         
-        $("#domain_owner").text( new BigNumber(domain.owner) != 0 ? domain.owner : "NOT CLAIMED" );
+        $("#domain_owner").text( web3.toBigNumber(domain.owner) != 0 ? domain.owner : "NOT CLAIMED" );
 
         $("#domain_expires").text( domain.expires );
         var current_block = 0;
@@ -1290,7 +1289,7 @@ function  updateDomainPage()
         }
 
         $("#domain_price").text( domain.owner ? ( domain.price > 0 ? formatEther( domain.price, "ETH" ) : "NOT FOR SALE" ) : "" ) ;
-        $("#domain_transfer").text( new BigNumber( domain.transfer ) == 0 ? "" : domain.transfer );
+        $("#domain_transfer").text( web3.toBigNumber( domain.transfer ) == 0 ? "" : domain.transfer );
 
 
         ipfs_url = ""
@@ -1312,14 +1311,14 @@ function  updateDomainPage()
     
         // Deturmine the status
 
-        var available = new BigNumber( domain.owner ) == 0
+        var available = web3.toBigNumber( domain.owner ) == 0
         var on_sale = domain.price == undefined || domain.price == 0
         var expired = domain.expires < current_block
         var mine = false;
         if( !available ) {
             for( var i = 0; i < my_accounts.length; i++ )
             {
-                if( new BigNumber( my_accounts[i] ).eq( new BigNumber( domain.owner ) ) ) 
+                if( web3.toBigNumber( my_accounts[i] ).eq( web3.toBigNumber( domain.owner ) ) ) 
                 { 
                     mine = true; break; 
                 }             
@@ -1330,7 +1329,7 @@ function  updateDomainPage()
         var forme = false;
         for( var i = 0; i < my_accounts.length; i++ )
         {
-            if( new BigNumber( my_accounts[i] ).eq( new BigNumber( domain.transfer ) ) ) 
+            if( web3.toBigNumber( my_accounts[i] ).eq( web3.toBigNumber( domain.transfer ) ) ) 
             { 
                 forme = true; break; 
             }
@@ -1669,7 +1668,7 @@ function makeData( arr )
             while( nv.length < 32 * 2 ) { nv += "00"; }
         }
         
-        if( typeof n == "number"  || n instanceof BigNumber )
+        if( typeof n == "number"  || web3._extend.utils.isBigNumber(n) ) 
         {
             nv = web3.toHex( n );
             if( nv.indexOf( '0x' ) == 0 ) nv = nv.substr( 2 );
@@ -1767,7 +1766,7 @@ function DomainRecord ( domain, owner, expires, price, transfer ) {
     this.stat = function () {
         
         if( this.expires <= current_block ) return "EXPIRED";
-        if( new BigNumber( this.price ) > 0  ) return "FOR SALE";
+        if( web3.toBigNumber( this.price ) > 0  ) return "FOR SALE";
         return "";
     }
 
@@ -1780,9 +1779,9 @@ function refreshAllDomainsPortion() {
     {
         var n_domains =  contract.n_domains();
         
-        while( !all_domains_0_passed || new BigNumber( all_domains_curent_domain ) != 0 ) 
+        while( !all_domains_0_passed || web3.toBigNumber( all_domains_curent_domain ) != 0 ) 
         {
-            if( !all_domains_0_passed && new BigNumber( all_domains_curent_domain ) == 0 ) all_domains_0_passed = true;
+            if( !all_domains_0_passed && web3.toBigNumber( all_domains_curent_domain ) == 0 ) all_domains_0_passed = true;
             
             if( all_domains_cancel ) break;
             
@@ -1807,7 +1806,7 @@ function refreshAllDomainsPortion() {
                 var mine = false;
                 for( var i = 0; i < my_accounts.length; i++ )
                 {
-                    if( new BigNumber( my_accounts[i] ).eq( new BigNumber( d.owner ) ) ) 
+                    if( web3.toBigNumber( my_accounts[i] ).eq( web3.toBigNumber( d.owner ) ) ) 
                     { 
                         mine = true; break; 
                     }
@@ -1847,7 +1846,7 @@ function refreshAllDomainsPortion() {
                     all_domains_csv += web3.fromWei( d.price, "ether" ) + ",";
                     all_domains_csv += d.expires + ",";
                     all_domains_csv += d.days() + ",";
-                    all_domains_csv += ( new BigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
+                    all_domains_csv += ( web3.toBigNumber( d.transfer ) == 0 ? "" : d.transfer ) + ",";
                     all_domains_csv += d.stat() + "\n";                        
                 }
                 else
