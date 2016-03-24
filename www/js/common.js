@@ -15,6 +15,7 @@ batch_domain_n = 0
 batch_domain_wallet_to_use = ""
 batch_domain_cancel = false;
 batch_domain_process = ""
+batch_transfer = ""
 batch_id_value = 0
 batch_id = 0
 batch_is_active = false;
@@ -97,6 +98,7 @@ function processBatch()
                 
         $('#btn_batch_claim').prop('disabled', false );                
         $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_transfer').prop('disabled', false );                
         $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );     
         $("#batch_title").text( "No active process")    
@@ -122,6 +124,7 @@ function processBatch()
                 
         $('#btn_batch_claim').prop('disabled', false );                
         $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_transfer').prop('disabled', false );                
         $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );          
         $("#batch_title").text( "No active process")
@@ -205,6 +208,19 @@ function processBatch()
                 
                 contract.changeDomain.sendTransaction( domain, 2000000, batch_price, d.transfer, params );
                 break;
+            case "transfer":            
+                res = contract.getDomain( domain );
+
+                d = new DomainRecord( domain, res[0], res[1], res[2], res[3] );
+                
+                params = {
+                            gas: 200000,
+                            from : d.owner,
+                            value: 0
+                        };
+                
+                contract.changeDomain.sendTransaction( domain, 2000000, d.price, batch_transfer, params );
+                break;
             case "id":            
                 res = contract.getDomain( domain );
 
@@ -233,6 +249,7 @@ function processBatch()
         batch_domain_n = 0;
         $('#btn_batch_claim').prop('disabled', false );                
         $('#btn_batch_price').prop('disabled', false );                
+        $('#btn_batch_transfer').prop('disabled', false );                
         $('#btn_batch_prolong').prop('disabled', false );                
         $('#btn_batch_domain_cancel').prop('disabled', true );       
         $("#batch_title").text( "No active process")
@@ -337,7 +354,8 @@ $().ready( function(e){
         batch_domain_list = []
         
         list = $("#batch_list").val();
-        res = list.split(/[\s\,;\t\"\']+/);
+        //res = list.split(/[\s\,;\t\"\']+/);
+        res = list.split(/[\n\r]+/);
         
         for( var i = 0; i < res.length; i++ )
         {
@@ -375,6 +393,7 @@ $().ready( function(e){
 
                     $('#btn_batch_claim').prop('disabled',true );                
                     $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_transfer').prop('disabled',true );                
                     $('#btn_batch_prolong').prop('disabled',true );                
                     $('#btn_batch_domain_cancel').prop('disabled',false );                
                     batch_domain_cancel = false;
@@ -391,7 +410,7 @@ $().ready( function(e){
         batch_domain_list = []
         
         list = $("#batch_list").val();
-        res = list.split(/[\s\,;\t\"\']+/);
+        res = list.split(/[\n\r]+/);
         
         for( var i = 0; i < res.length; i++ )
         {
@@ -445,11 +464,72 @@ $().ready( function(e){
         
     });
 
+    $("#btn_batch_transfer").click( function() { 
+        batch_domain_list = []
+        
+        list = $("#batch_list").val();
+        res = list.split(/[\n\r]+/);
+        
+        for( var i = 0; i < res.length; i++ )
+        {
+            n = res[i].trim();
+            if( n == "" ) continue;
+            
+            batch_domain_list.push( n );
+            
+        }
+        
+        if( batch_domain_list.length == 0 ) {
+            swal("List Error!", "Cannot recognize any valid names in the list", "error" ) 
+            return;
+        }
+        
+        batch_transfer = $("#batch_transfer").val()
+        
+        if( !web3.isAddress( batch_transfer ) ) {
+        swal("List Error!", "'" + batch_transfer + "' does not look like a valid address", "error" ) 
+        return;
+        }
+            
+
+        swal({   
+            title: "Are you sure?",   
+            text: "You are about to set transfer address for " + batch_domain_list.length + 
+                    " domains."  ,   
+            type: "warning",   
+            showCancelButton: true,   
+            confirmButtonText: "Yes, transfer!",
+            closeOnConfirm: true,    
+            },
+            function(isConfirm){   
+                if( isConfirm )
+                {
+                    batch_progress.setText( "");
+                    batch_progress.animate( 0 );
+                    batch_domain_n = 0;
+                    batch_domain_process = "transfer";
+                    $("#batch_title").text( "Transfering in progress...")
+
+                    $('#btn_batch_claim').prop('disabled',true );                
+                    $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_transfer').prop('disabled',true );                
+                    $('#btn_batch_prolong').prop('disabled',true );                
+                    $('#btn_batch_domain_cancel').prop('disabled',false );                
+                    batch_domain_cancel = false;
+                    batch_is_active = true;
+
+                    setTimeout( processBatch, BATCH_PROCESS_TIMEOUT);          
+                }
+            }
+        );        
+        
+    });
+
     $("#btn_batch_id").click( function() { 
         batch_domain_list = []
         
         list = $("#batch_list").val();
-        res = list.split(/[\s\,;\t\"\']+/);
+        res = list.split(/[\n\r]+/);
         
         for( var i = 0; i < res.length; i++ )
         {
@@ -519,6 +599,7 @@ $().ready( function(e){
 
                     $('#btn_batch_claim').prop('disabled',true );                
                     $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_transfer').prop('disabled',true );                
                     $('#btn_batch_prolong').prop('disabled',true );                
                     $('#btn_batch_domain_cancel').prop('disabled',false );                
                     batch_domain_cancel = false;
@@ -576,7 +657,7 @@ $().ready( function(e){
     $("#btn_batch_claim").click( function() { 
         
         list = $("#batch_list").val();
-        res = list.split(/[\s\,;\t\"\']+/);
+        res = list.split(/[\n\r]+/);
         
         uppercase = $('#uppercase').is(":checked")
         lowercase = $('#lowercase').is(":checked")
@@ -653,6 +734,7 @@ $().ready( function(e){
                     $('#btn_batch_claim').prop('disabled',true );                
                     $('#btn_batch_prolong').prop('disabled',true );                
                     $('#btn_batch_price').prop('disabled',true );                
+                    $('#btn_batch_transfer').prop('disabled',true );                
                     $('#btn_batch_domain_cancel').prop('disabled',false );                
                     batch_domain_cancel = false;
                     batch_is_active = true;
