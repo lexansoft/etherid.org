@@ -18,7 +18,7 @@ This is the solution for the name erosion problem. If you have registered a doma
 
 While you own a domain you can prolong the ownership.
 
-If you failed to prolong the ownership and the domain expired, then anyoneone can calim the ownership for it.
+If you failed to prolong the ownership and the domain expired, then anyone can claim the ownership for it.
 
 You can register as many as you want ID's for your domain (name:value pairs).
 
