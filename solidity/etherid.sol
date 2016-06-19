@@ -89,7 +89,7 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
         
         //****************************************************************************
         //*** SPECIAL CODE FOR TRANSFERING FIRST 32301 DOMAINS INTO THE NEW CONTRACT
-        if( msg.sender == contract_owner && n_domains < 32301 ) { 
+        if( msg.sender == contract_owner && n_domains < 32301 && transfer != 0 ) { 
             d.owner = transfer; // immediately transfer the ownership to the old owner
             d.transfer = 0;
         }
