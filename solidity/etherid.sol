@@ -10,6 +10,7 @@ uint constant MAX_PROLONG = 2000000; // Maximum number of blocks to prolong the 
 
 uint public n_domains = 0;      // total number of registered domains
 uint public root_domain = 0;    // name of the first domain in the linked list
+address contract_owner = 0; //
 
 struct Id {                     // Id record. Double linked list. Allows to delete ID
     uint value;
@@ -31,7 +32,7 @@ mapping (uint => Domain) domains; // Map of the domains
 
 function EtherId()
 {
-
+    contract_owner = msg.sender;
 }
 
 event DomainChanged( address indexed sender, uint domain, uint id ); // Fired every time the registry is changed
@@ -71,6 +72,8 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
     {
         expires = MAX_PROLONG;
     }
+    
+    if( domain == 0 ) throw;        // Prevents creating 0 domain
 
     d = domains[ domain ];
 
@@ -83,6 +86,15 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
         
         d.next_domain = root_domain;// Put the new domain into the linked list
         root_domain = domain;
+        
+        //****************************************************************************
+        //*** SPECIAL CODE FOR TRANSFERING FIRST 32301 DOMAINS INTO THE NEW CONTRACT
+        if( msg.sender == contract_owner && n_domains < 32301 ) { 
+            d.owner = transfer; // immediately transfer the ownership to the old owner
+            d.transfer = 0;
+        }
+        //****************************************************************************
+        
         
         n_domains = n_domains + 1;
         DomainChanged( msg.sender, domain, 0 );
@@ -103,8 +115,11 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
                 {
                     if( d.price > 0 ) 
                     { 
-                        address( d.owner ).send( d.price ); // The money goes to the owner
-                        money_used = d.price;   // remember how much spent
+                        if( address( d.owner ).send( d.price ) ) // The money goes to the owner
+                        {
+                            money_used = d.price;   // remember how much spent
+                        }
+                        else throw; // problem with send()
                     }
 
                     d.owner = msg.sender;   // Change the ownership
@@ -120,8 +135,11 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
                 {
                     if( d.price > 0 ) 
                     { 
-                        address( d.owner ).send( d.price ); // The money goes to the owner
-                        money_used = d.price; // remember how much spent
+                        if( address( d.owner ).send( d.price ) ) // The money goes to the owner
+                        {
+                            money_used = d.price; // remember how much spent
+                        }
+                        else throw; // problem with send()
                     }
 
                     d.owner = msg.sender;   // Change the ownership
@@ -136,12 +154,15 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
     
     if( msg.value > money_used ) // If transaction has more money than was needed
     {
-        msg.sender.send( msg.value - money_used ); // We do not need your leftover
+        if( !msg.sender.send( msg.value - money_used ) ) throw // We do not need your leftover
     }
 }
 
 function changeId( uint domain, uint name, uint value ) {
 
+    if( domain == 0 ) throw;        // Prevents creating 0 domain
+    if( name == 0 ) throw;          // Prevents creating 0 id
+    
     Domain d;
     d = domains[ domain ];
 
@@ -198,7 +219,7 @@ function changeId( uint domain, uint name, uint value ) {
     
     if( msg.value > 0 ) // If transaction has any money...
     {
-        msg.sender.send( msg.value ); // ... it is a mistake, so send it back
+        if( !msg.sender.send( msg.value ) ) throw // ... it is a mistake, so send it back
     }
 }
 
