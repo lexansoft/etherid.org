@@ -35,6 +35,20 @@
 -->
     
 </div>    
+
+<div class=alert >
+    <P><b>*** WARNING ***</b></P>
+    <p>The EtherID smart contract suffers the "Unchecked-Send" Bug. It is the same problem theDAO contract has.</p>
+    <p>
+    <ul>
+        <li>The EtherID contract does not keep any Ether balance, so there is no way someone can drain any Ethere from it.</li>
+        <li>The only possibility to exploit the bug is to transfer a domain that is on sale without properly sending the requested amount to the seller. If your domain is not on sale, you are safe.</li>
+        <li>We are working on a possible solution. We saved the current domain DB as it is now. </li>
+    </ul>
+    </p>        
+    <p><b>Please do not register new domains until we fix the problem.</b></p>
+</div>    
+    
     
     
 <div id="tabs">

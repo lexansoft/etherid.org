@@ -10,6 +10,12 @@ a:visited { color:  #59869b; ; }
 a:hover { color: black;}
 a:active { color:  #59869b; ; }
 
+.alert {
+    background-color: yellow;
+    margin: 1em;
+    padding: 1em;
+    color: darkblue;
+}
 
 .wrapper {
     width: 100%;
