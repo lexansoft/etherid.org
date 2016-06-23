@@ -11,12 +11,60 @@
 
 <script src="js/int256.js"></script>    
 <script src="js/bundle.js"></script>    
-<script src="js/common.js"></script>    
+<script src="js/common.js"></script>     
 <script src="js/first32301domains.js"></script>    
     
     
 <link rel="stylesheet" type="text/css" href="DataTables/datatables.min.css"/>
 <script type="text/javascript" src="DataTables/datatables.min.js"></script>   
+    
+    
+<script>
+
+    var EID
+    var web3
+    var n = 0
+    
+    
+    window.onload = function() {
+        
+        /* first of all set up the web3 object. THis should work in Mist as well */
+        if(typeof web3 === 'undefined')
+            web3 = require('web3');     
+
+        if( web3.currentProvider == null )
+            web3.setProvider( new web3.providers.HttpProvider( ) );                
+
+        /* Get the EtherID API object */
+        EID = require( "etherid-js" )        
+        
+        $('#progress_line').text( "Total records: " + first32301domains.length )
+
+        $("#start").click( function(){
+            processNext()
+        })
+    
+    }    
+    
+    
+    function processNext() {
+        
+        if( n >= first32301domains.length ) {
+            $('#progress_line').text( "All Done!" )
+            return;
+        }
+        
+        s = n + "/" + first32301domains.length + " " + first32301domains[n].v
+                
+        $('#progress_line').text( s )
+        
+        n++;//DEBUG
+        setInterval( processNext, 1 );
+        
+    }
+    
+    
+</script>    
     
 </head>
 
@@ -24,16 +72,29 @@
     
 <body>
 <div class="wrapper">
-
+    
+    
 <div id="header">
 <a id="logo" href="http://EtherID.org">EtherID.org</a>
 </div>    
     
 <div>
 
+<h1>Transfering first 32301 domains into the new contract</h1>    
+
+
+    <p>
+        Total Domains: <span id=n_domians>0</span>
+    </p>
     
+    <p>
+    <button id=start>Start</button>
+    </p>    
     
+    <p><span id=progress_line></span></p>
     
+    <div class="progress" id="batch_progress"></div>
+    <div class="progress" id="update_list_progress"></div>
 </div>
 
 
