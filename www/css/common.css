@@ -18,6 +18,10 @@ a:active { color:  #59869b; ; }
     text-align: center;
 }
 
+.alert a {
+    color: white;
+}
+
 .wrapper {
     width: 100%;
     min-width: 1020px;
