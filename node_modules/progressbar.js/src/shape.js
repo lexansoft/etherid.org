@@ -42,15 +42,26 @@ var Shape = function Shape(container, opts) {
                     value: 'translate(-50%, -50%)'
                 }
             },
+            autoStyleContainer: true,
             alignToBottom: true,
-            value: '',
+            value: null,
             className: 'progressbar-text'
         },
         svgStyle: {
             display: 'block',
             width: '100%'
-        }
+        },
+        warnings: false
     }, opts, true);  // Use recursive extend
+
+    // If user specifies e.g. svgStyle or text style, the whole object
+    // should replace the defaults to make working with styles easier
+    if (utils.isObject(opts) && opts.svgStyle !== undefined) {
+        this._opts.svgStyle = opts.svgStyle;
+    }
+    if (utils.isObject(opts) && utils.isObject(opts.text) && opts.text.style !== undefined) {
+        this._opts.text.style = opts.text.style;
+    }
 
     var svgView = this._createSvgView(this._opts);
 
@@ -67,28 +78,29 @@ var Shape = function Shape(container, opts) {
 
     this._container = element;
     this._container.appendChild(svgView.svg);
+    if (this._opts.warnings) {
+        this._warnContainerAspectRatio(this._container);
+    }
 
     if (this._opts.svgStyle) {
         utils.setStyles(svgView.svg, this._opts.svgStyle);
-    }
-
-    this.text = null;
-    if (this._opts.text.value) {
-        this.text = this._createTextElement(this._opts, this._container);
-        this._container.appendChild(this.text);
     }
 
     // Expose public attributes before Path initialization
     this.svg = svgView.svg;
     this.path = svgView.path;
     this.trail = svgView.trail;
-    // this.text is also a public attribute
+    this.text = null;
 
     var newOpts = utils.extend({
         attachment: undefined,
         shape: this
     }, this._opts);
     this._progressPath = new Path(svgView.path, newOpts);
+
+    if (utils.isObject(this._opts.text) && this._opts.text.value !== null) {
+        this.setText(this._opts.text.value);
+    }
 };
 
 Shape.prototype.animate = function animate(progress, opts, cb) {
@@ -150,20 +162,24 @@ Shape.prototype.value = function value() {
     return this._progressPath.value();
 };
 
-Shape.prototype.setText = function setText(text) {
+Shape.prototype.setText = function setText(newText) {
     if (this._progressPath === null) {
         throw new Error(DESTROYED_ERROR);
     }
 
     if (this.text === null) {
         // Create new text node
-        this.text = this._createTextElement(this._opts, this._container);
+        this.text = this._createTextContainer(this._opts, this._container);
         this._container.appendChild(this.text);
     }
 
-    // Remove previous text node and add new
-    this.text.removeChild(this.text.firstChild);
-    this.text.appendChild(document.createTextNode(text));
+    // Remove previous text and add new
+    if (utils.isObject(newText)) {
+        utils.removeChildren(this.text);
+        this.text.appendChild(newText);
+    } else {
+        this.text.innerHTML = newText;
+    }
 };
 
 Shape.prototype._createSvgView = function _createSvgView(opts) {
@@ -237,30 +253,29 @@ Shape.prototype._createPathElement = function _createPathElement(pathString, opt
     return path;
 };
 
-Shape.prototype._createTextElement = function _createTextElement(opts, container) {
-    var element = document.createElement('p');
-    element.appendChild(document.createTextNode(opts.text.value));
+Shape.prototype._createTextContainer = function _createTextContainer(opts, container) {
+    var textContainer = document.createElement('div');
+    textContainer.className = opts.text.className;
 
     var textStyle = opts.text.style;
     if (textStyle) {
-        container.style.position = 'relative';
+        if (opts.text.autoStyleContainer) {
+            container.style.position = 'relative';
+        }
 
-        utils.setStyles(element, textStyle);
-
+        utils.setStyles(textContainer, textStyle);
         // Default text color to progress bar's color
         if (!textStyle.color) {
-            element.style.color = opts.color;
+            textContainer.style.color = opts.color;
         }
     }
 
-    element.className = opts.text.className;
-
-    this._initializeTextElement(opts, container, element);
-    return element;
+    this._initializeTextContainer(opts, container, textContainer);
+    return textContainer;
 };
 
 // Give custom shapes possibility to modify text element
-Shape.prototype._initializeTextElement = function _initializeTextElement(opts, container, element) {
+Shape.prototype._initializeTextContainer = function(opts, container, element) {
     // By default, no-op
     // Custom shapes should respect API options, such as text.style
 };
@@ -271,6 +286,33 @@ Shape.prototype._pathString = function _pathString(opts) {
 
 Shape.prototype._trailString = function _trailString(opts) {
     throw new Error('Override this function for each progress bar');
+};
+
+Shape.prototype._warnContainerAspectRatio = function _warnContainerAspectRatio(container) {
+    if (!this.containerAspectRatio) {
+        return;
+    }
+
+    var computedStyle = window.getComputedStyle(container, null);
+    var width = parseFloat(computedStyle.getPropertyValue('width'), 10);
+    var height = parseFloat(computedStyle.getPropertyValue('height'), 10);
+    if (!utils.floatEquals(this.containerAspectRatio, width / height)) {
+        console.warn(
+            'Incorrect aspect ratio of container',
+            '#' + container.id,
+            'detected:',
+            computedStyle.getPropertyValue('width') + '(width)',
+            '/',
+            computedStyle.getPropertyValue('height') + '(height)',
+            '=',
+            width / height
+        );
+
+        console.warn(
+            'Aspect ratio of should be',
+            this.containerAspectRatio
+        );
+    }
 };
 
 module.exports = Shape;

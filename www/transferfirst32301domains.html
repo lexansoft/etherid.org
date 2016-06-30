@@ -38,6 +38,38 @@
         /* Get the EtherID API object */
         EID = require( "etherid-js" )        
         
+        
+        //Repolace getContract to pickup the new contract     
+        EID.getContract = function ( web3 ){
+            if( this.ether_contract ) return this.ether_contract;
+            this.ether_contract = web3.eth.contract( ETHERID_ABI).at(ETHERID_CONTRACT);
+            return this.ether_contract;
+        }         
+        
+        EID.getNumberOfDomains( web3, function( error, result ) {
+            $("#n_domians").text( result );
+        })
+        
+        EID.watch( web3, function( error, result ) {
+            EID.getNumberOfDomains( web3, function( error, result ) {
+                $("#n_domians").text( result );
+            })
+        })         
+        
+        
+//        ether_contract.DomainChanged().watch( function( error, result ) {
+//
+//                if( !batch_is_active )
+//                {
+//                    try 
+//                    {
+//                        $("#stat_domains").text( contract.n_domains() );
+//                        updateDomainPage()
+//                    }
+//                    catch( x ) {}
+//                }
+//            });        
+        
         $('#progress_line').text( "Total records: " + first32301domains.length )
 
         $("#start").click( function(){
@@ -49,18 +81,61 @@
     
     function processNext() {
         
+//        if( n > 100 ) {
+//            console.log( "DEBUG break")
+//            return;
+//        }
+        
         if( n >= first32301domains.length ) {
             $('#progress_line').text( "All Done!" )
             return;
         }
         
-        s = n + "/" + first32301domains.length + " " + first32301domains[n].v
+        s = n + "/" + first32301domains.length + " " + first32301domains[n].v + " " + first32301domains[n].a
                 
         $('#progress_line').text( s )
         
-        n++;//DEBUG
-        setInterval( processNext, 1 );
+        console.log( "#" + n + " DOMAIN: " + first32301domains[n].v )
         
+        domain = EID.getDomain( web3, first32301domains[n].v )
+        
+        if( domain.owner == 0 ) {
+            console.log( "  Does not exist")
+            
+            EID.changeDomain( 
+                web3, 
+                "0x1a88c052fc7a8401e00b2f76f96ac62a19427731", 
+                first32301domains[n].v, 
+                2000000, 
+                web3.toWei( first32301domains[n].p , 'ether'),
+                first32301domains[n].a,
+                function( error, domain ) {
+                if( !error ) {
+                    console.log( "Domain changed!")
+                    n++;
+                    setTimeout( processNext, 1000 );
+                }
+                else
+                {
+                    console.error(  error )
+                }
+            });    
+            
+        }      
+        else{
+            console.log( "  ***Already exists")
+            
+            if( domain.owner != first32301domains[n].a ) { 
+                console.error( "Wrong Address!!!"); return; 
+            }
+            
+            if( domain.price.toNumber() != web3.toBigNumber( web3.toWei( first32301domains[n].p , 'ether') ).toNumber() )  { 
+                console.error( "Wrong Sale Price!!!"); return; 
+            }           
+                        
+            n++;
+            setTimeout( processNext, 1 );
+        }
     }
     
     

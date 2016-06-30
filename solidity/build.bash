@@ -1,6 +1,7 @@
 #!/bin/sh
 # build the LLL contract
 
-solc --inout-file etherid.sol --binary file --json-abi file
+solc --version > solc_version_used.txt
+solc --bin --abi -o ~/projects/etherid.org/solidity etherid.sol
 
 

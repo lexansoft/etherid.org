@@ -10,6 +10,11 @@ var EASING_ALIASES = {
 };
 
 var Path = function Path(path, opts) {
+    // Throw a better error if not initialized with `new` keyword
+    if (!(this instanceof Path)) {
+        throw new Error('Constructor was called without new keyword');
+    }
+
     // Default parameters for animation
     opts = utils.extend({
         duration: 800,
@@ -152,7 +157,6 @@ Path.prototype._calculateTo = function _calculateTo(progress, easing) {
 Path.prototype._stopTween = function _stopTween() {
     if (this._tweenable !== null) {
         this._tweenable.stop();
-        this._tweenable.dispose();
         this._tweenable = null;
     }
 };

@@ -11,6 +11,8 @@ var SemiCircle = function SemiCircle(container, options) {
         'M 50,50 m -{radius},0' +
         ' a {radius},{radius} 0 1 1 {2radius},0';
 
+    this.containerAspectRatio = 2;
+
     Shape.apply(this, arguments);
 };
 
@@ -21,20 +23,20 @@ SemiCircle.prototype._initializeSvg = function _initializeSvg(svg, opts) {
     svg.setAttribute('viewBox', '0 0 100 50');
 };
 
-SemiCircle.prototype._initializeTextElement = function _initializeTextElement(
+SemiCircle.prototype._initializeTextContainer = function _initializeTextContainer(
     opts,
     container,
-    element
+    textContainer
 ) {
     if (opts.text.style) {
         // Reset top style
-        element.style.top = 'auto';
+        textContainer.style.top = 'auto';
+        textContainer.style.bottom = '0';
 
-        element.style.bottom = '0';
         if (opts.text.alignToBottom) {
-            utils.setStyle(element, 'transform', 'translate(-50%, 0)');
+            utils.setStyle(textContainer, 'transform', 'translate(-50%, 0)');
         } else {
-            utils.setStyle(element, 'transform', 'translate(-50%, 50%)');
+            utils.setStyle(textContainer, 'transform', 'translate(-50%, 50%)');
         }
     }
 };

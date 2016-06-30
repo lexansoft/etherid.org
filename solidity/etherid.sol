@@ -39,8 +39,7 @@ event DomainChanged( address indexed sender, uint domain, uint id ); // Fired ev
 
 function getId( uint domain, uint id ) constant returns (uint v, uint next_id, uint prev_id )
 {
-    Id i;
-    i = domains[domain].ids[id]; 
+    Id i = domains[domain].ids[id]; 
 
     v = i.value;
     next_id = i.next_id;
@@ -50,8 +49,7 @@ function getId( uint domain, uint id ) constant returns (uint v, uint next_id, u
 function getDomain( uint domain ) constant returns 
     (address owner, uint expires, uint price, address transfer, uint next_domain, uint root_id )
 {
-    Domain d;
-    d = domains[ domain ];
+    Domain d = domains[ domain ];
     
     owner = d.owner;
     expires = d.expires;
@@ -64,8 +62,6 @@ function getDomain( uint domain ) constant returns
 
 function changeDomain( uint domain, uint expires, uint price, address transfer ) 
 {
-    Domain d;
-    
     uint money_used = 0;            // How much was spent here
 
     if( expires > MAX_PROLONG )     // Not prolong for too long
@@ -75,7 +71,7 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
     
     if( domain == 0 ) throw;        // Prevents creating 0 domain
 
-    d = domains[ domain ];
+    Domain d = domains[ domain ];
 
     if( d.owner == 0 )              // 0 means the domain is not yet registered
     { 
@@ -133,14 +129,11 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
             {
                 if( d.price > 0 &&  msg.value >= d.price ) // ... on sale, and enough money
                 {
-                    if( d.price > 0 ) 
-                    { 
-                        if( address( d.owner ).send( d.price ) ) // The money goes to the owner
-                        {
-                            money_used = d.price; // remember how much spent
-                        }
-                        else throw; // problem with send()
+                    if( address( d.owner ).send( d.price ) ) // The money goes to the owner
+                    {
+                        money_used = d.price; // remember how much spent
                     }
+                    else throw; // problem with send()
 
                     d.owner = msg.sender;   // Change the ownership
                     d.price = price;        // New price
@@ -154,7 +147,7 @@ function changeDomain( uint domain, uint expires, uint price, address transfer )
     
     if( msg.value > money_used ) // If transaction has more money than was needed
     {
-        if( !msg.sender.send( msg.value - money_used ) ) throw // We do not need your leftover
+        if( !msg.sender.send( msg.value - money_used ) ) throw; // We do not need your leftover
     }
 }
 
@@ -163,13 +156,11 @@ function changeId( uint domain, uint name, uint value ) {
     if( domain == 0 ) throw;        // Prevents creating 0 domain
     if( name == 0 ) throw;          // Prevents creating 0 id
     
-    Domain d;
-    d = domains[ domain ];
+    Domain d = domains[ domain ];
 
     if( d.owner == msg.sender )     // Only owner can change the ID
     {
-        Id id;
-        id = d.ids[ name ];
+        Id id = d.ids[ name ];
 
         if( id.value == 0 ) {       // 0 means the ID was not found
             if( value != 0 ) {      // Only add non zero values
@@ -219,7 +210,7 @@ function changeId( uint domain, uint name, uint value ) {
     
     if( msg.value > 0 ) // If transaction has any money...
     {
-        if( !msg.sender.send( msg.value ) ) throw // ... it is a mistake, so send it back
+        if( !msg.sender.send( msg.value ) ) throw; // ... it is a mistake, so send it back
     }
 }
 

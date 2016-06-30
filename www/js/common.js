@@ -1,4 +1,5 @@
-ETHERID_CONTRACT = "0x3589d05a1ec4af9f65b0e5554e645707775ee43c"
+//ETHERID_CONTRACT = "0x3589d05a1ec4af9f65b0e5554e645707775ee43c"
+ETHERID_CONTRACT = "0xd588b586d61c826a0e87919b3d1a239206d58bf2"
 ETHERID_ABI = 
 [{"constant":true,"inputs":[],"name":"root_domain","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"}],"name":"getDomain","outputs":[{"name":"owner","type":"address"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"},{"name":"next_domain","type":"uint256"},{"name":"root_id","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[],"name":"n_domains","outputs":[{"name":"","type":"uint256"}],"type":"function"},{"constant":true,"inputs":[{"name":"domain","type":"uint256"},{"name":"id","type":"uint256"}],"name":"getId","outputs":[{"name":"v","type":"uint256"},{"name":"next_id","type":"uint256"},{"name":"prev_id","type":"uint256"}],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"expires","type":"uint256"},{"name":"price","type":"uint256"},{"name":"transfer","type":"address"}],"name":"changeDomain","outputs":[],"type":"function"},{"constant":false,"inputs":[{"name":"domain","type":"uint256"},{"name":"name","type":"uint256"},{"name":"value","type":"uint256"}],"name":"changeId","outputs":[],"type":"function"},{"inputs":[],"type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"name":"sender","type":"address"},{"indexed":false,"name":"domain","type":"uint256"},{"indexed":false,"name":"id","type":"uint256"}],"name":"DomainChanged","type":"event"}]
 ;
@@ -28,7 +29,6 @@ all_domains_pattern = ""
 all_domains_cancel = false;
 all_domains_csv = "";
 all_domains_to_csv = false;
-all_domains_0_passed = false
 only_mine = false
 only_expired = false
 only_for_sale = false
@@ -1861,10 +1861,8 @@ function refreshAllDomainsPortion() {
     {
         var n_domains =  contract.n_domains();
         
-        while( !all_domains_0_passed || web3.toBigNumber( all_domains_curent_domain ) != 0 ) 
+        while( web3.toBigNumber( all_domains_curent_domain ) != 0 ) 
         {
-            if( !all_domains_0_passed && web3.toBigNumber( all_domains_curent_domain ) == 0 ) all_domains_0_passed = true;
-            
             if( all_domains_cancel ) break;
             
             res = contract.getDomain( all_domains_curent_domain );
@@ -2022,7 +2020,6 @@ function refreshAllDomains( to_csv )
         all_domains_curent_domain = contract.root_domain();
         
         all_domains_data = []
-        all_domains_0_passed = false;
         all_domains_n = 0;
         all_domains_to_csv = to_csv;
         all_domains_csv = "NAME,NAMEHEX,OWNER,PRICE,EXPIRES,DAYS_LEFT,TRANSFER,STATUS \n";

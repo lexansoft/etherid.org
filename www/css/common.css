@@ -11,10 +11,11 @@ a:hover { color: black;}
 a:active { color:  #59869b; ; }
 
 .alert {
-    background-color: yellow;
+    background-color: green;
     margin: 1em;
     padding: 1em;
-    color: darkblue;
+    color: white;
+    text-align: center;
 }
 
 .wrapper {
