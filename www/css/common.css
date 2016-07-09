@@ -12,8 +12,8 @@ a:active { color:  #59869b; ; }
 
 .alert {
     background-color: green;
-    margin: 1em;
-    padding: 1em;
+    margin: .1em;
+    padding: .1em;
     color: white;
     text-align: center;
 }
