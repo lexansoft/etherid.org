@@ -1,0 +1,8 @@
+{
+    "id": "etherid",
+    "name": "EtherId",
+    "description": "Simple Name Registar",
+    "version": "0.1",
+    "author": "Alexandre Naverniouk",
+    "iconUrl": "/images/icon.png"
+}
