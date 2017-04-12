@@ -582,7 +582,7 @@ $().ready( function(e){
         swal({   
             title: "Are you sure?",   
             text: "You are about to change id " + batch_id + " for " + batch_domain_list.length +  
-                    " domains to " + formatEther( batch_price, "ETH") + "."  ,   
+                    " domains to " + batch_id_value + "."  ,   
             type: "warning",   
             showCancelButton: true,   
             confirmButtonText: "Yes, change ID!",
